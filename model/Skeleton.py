@@ -9,8 +9,8 @@ class Skeleton(Monster):
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
-            dmg = random.randint(self.get_damage_min(), self.get_damage_max())
-            print(f"{self.get_name()} slashes for {dmg} damage.")
-            target.take_damage(dmg)
+            damage = random.randint(self.get_damage_min(), self.get_damage_max())
+            print(f"{self.get_name()} slashes for {damage} damage.")
+            target.take_damage(damage)
         else:
-            print(f"{self.get_name()}'s slash missed.")
+            print(f"{self.get_name()}'s slash missed!")

@@ -9,11 +9,11 @@ class Priestess(Hero):
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
-            dmg = random.randint(self.get_damage_min(), self.get_damage_max())
-            print(f"{self.get_name()} attacks for {dmg} damage.")
-            target.take_damage(dmg)
+            damage = random.randint(self.get_damage_min(), self.get_damage_max())
+            print(f"{self.get_name()} attacks for {damage} damage.")
+            target.take_damage(damage)
         else:
-            print(f"{self.get_name()}'s attack missed.")
+            print(f"{self.get_name()}'s attack missed!")
 
     def use_skill(self, target=None):
         heal_amount = random.randint(25, 40)
