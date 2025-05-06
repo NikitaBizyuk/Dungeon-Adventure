@@ -1,39 +1,23 @@
-from abc import ABC, abstractmethod
-from dungeon_character import DungeonCharacter
+import random
 
-class Monster(ABC, DungeonCharacter):
+from model.dungeon_character import DungeonCharacter
+
+
+class Monster(DungeonCharacter):
     """
-        Abstract base class representing a Monster character in
-        the dungeon game.
+    Abstract class for monsters. Adds chance-based healing behavior.
+    """
 
-        A Monster is a type of DungeonCharacter with unique
-        healing abilities.
-        This class is a blueprint for all monster types and
-        cannot be instantiated directly.
+    def __init__(self, name, hp, dmg_min, dmg_max, speed, hit_chance, heal_chance):
+        super().__init__(name, hp, dmg_min, dmg_max, speed, hit_chance)
+        self._chance_to_heal = heal_chance
 
-        Attributes:
-            _chance_to_heal (float): The probability (0.0 to 1.0)
-            that the monster can heal itself during combat.
+    def get_chance_to_heal(self):
+        return self._chance_to_heal
 
-        Inherits:
-            DungeonCharacter: Base class with core combat attributes
-            such as name, health points, damage range, attack speed,
-            and chance to hit.
-
-        Args:
-            name (str): The monster's name.
-            health_points (int): The initial health value of the monster.
-            damage_min (int): Minimum damage the monster can deal.
-            damage_max (int): Maximum damage the monster can deal.
-            attack_speed (int): Number of attacks per round.
-            chance_to_hit (float): Probability (0.0 to 1.0) that the monster
-            lands an attack.
-            chance_to_heal (float): Probability (0.0 to 1.0) that the monster
-            can heal itself.
-        """
-    def __init__(self, name,health_points, damage_min,
-                 damage_max, attack_speed, chance_to_hit, chance_to_heal ) -> None:
-
-        super().__init__(name, health_points, damage_min, damage_max,
-                         attack_speed, chance_to_hit)
-        self._chance_to_heal = chance_to_heal
+    def heal(self, min_heal, max_heal):
+        """Applies healing if chance succeeds."""
+        if self.get_hit_points() > 0 and random.random() < self._chance_to_heal:
+            heal_amount = random.randint(min_heal, max_heal)
+            self.set_health_points(self.get_hit_points() + heal_amount)
+            print(f"{self.get_name()} healed for {heal_amount} HP!")
