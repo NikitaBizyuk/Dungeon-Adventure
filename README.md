@@ -1,7 +1,7 @@
 # Dungeon Adventure Game – TCSS 360
 
 ## Overview
-A turn-based dungeon crawler game implemented in Python. It uses an MVC architecture and is designed to help players collect the four pillars of OOP while navigating obstacles and battling monsters.
+A real time dungeon crawler game implemented in Python. It uses an MVC architecture and is designed to help players collect the four pillars of OOP while navigating obstacles and battling monsters.
 
 ## Structure
 - `model/`: Game logic and entity classes (Hero, Monster, Room)
