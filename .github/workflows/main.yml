@@ -1,0 +1,60 @@
+name: Discord Webhook on GitHub Events
+on:
+  # Trigger on specific events
+  push:  
+  pull_request:  
+  watch:  
+
+jobs:
+  webhook-request:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send a request to Discord webhook
+      run: |
+        RESPONSE=$(curl -H "Content-Type: application/json" -X POST -d '{
+          "content": "GitHub Event Notification",
+          "embeds": [
+            {
+              "title": "GitHub Event: ${{ github.event_name }}",
+              "description": "Event triggered by ${{ github.actor }} in the repository ${{ github.repository }}.",
+              "color": 5814783,
+              "fields": [
+                {
+                  "name": "Repository",
+                  "value": "${{ github.repository }}",
+                  "inline": true
+                },
+                {
+                  "name": "Branch",
+                  "value": "${{ github.ref }}",
+                  "inline": true
+                },
+                {
+                  "name": "Event Type",
+                  "value": "${{ github.event_name }}",
+                  "inline": true
+                },
+                {
+                  "name": "Commit Message",
+                  "value": "${{ github.event.head_commit.message }}",
+                  "inline": false
+                },
+                {
+                  "name": "Triggered By",
+                  "value": "${{ github.actor }}",
+                  "inline": true
+                }
+              ],
+              "author": {
+                "name": "${{ github.actor }}",
+                "url": "https://github.com/${{ github.actor }}",
+                "icon_url": "https://avatars.githubusercontent.com/u/${{ github.actor_id }}?v=4"
+              },
+              "footer": {
+                "text": "GitHub Actions Notification"
+              },
+              "timestamp": "${{ github.event.created_at }}"
+            }
+          ]
+        }' ${{ secrets.WEBHOOK_URL }})
+        echo "Discord webhook response: $RESPONSE"
