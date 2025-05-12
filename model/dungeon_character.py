@@ -22,7 +22,9 @@ class DungeonCharacter(ABC):
         self.__attack_speed = attack_speed
         self.__chance_to_hit = chance_to_hit
 
-
+    """ when battling the attack speeds of the two opponents will be compared
+    a character can get multiple attacks per round of battle based on speed: a character that is twice as fast gets two attacks per round, a character that is three times as fast gets three attacks, etc.
+    you have freedom to adjust how this works"""
     @abstractmethod
     def attack(self, target: "DungeonCharacter") -> None:
         """Perform an attack on the target character."""

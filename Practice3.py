@@ -3,7 +3,7 @@
 # exposing necessary functionality to the outside world
 
 class BadBankAccount:
-    def __init__(self, balance):
+    def _init_(self, balance):
         self.balance = balance
 
 # account = BadBankAccount(0.0)

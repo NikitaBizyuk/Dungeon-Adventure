@@ -51,11 +51,19 @@ class Bike(Vehicle):
         super().__init__(brand,model, year)
         self.no_of_wheels = no_of_wheels
 
+class Truck(Vehicle):
+    def __init__(self, brand,model, year, no_of_wheels):
+        super().__init__(brand, model, year)
+        self.no_of_wheels = no_of_wheels
+
 
 car = Car("TOYOTA", "Focus", 7788, 5, 4)
 bike = Bike("BIKE", "YODER", 232, 3)
+truck = Truck("TRUCK", "Focus", 7788, 5)
+
 print(car.__dict__)
 print(bike.__dict__)
+print(truck.__dict__)
 car.start()
 bike.start()
 

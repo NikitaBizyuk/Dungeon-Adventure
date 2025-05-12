@@ -37,3 +37,7 @@ class Monster(ABC, DungeonCharacter):
         super().__init__(name, health_points, damage_min, damage_max,
                          attack_speed, chance_to_hit)
         self._chance_to_heal = chance_to_heal
+
+
+        """ Just a quick note this class differs from the one Ian made.
+            We may have to double check"""

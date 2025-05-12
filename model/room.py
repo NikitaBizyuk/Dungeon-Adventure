@@ -5,6 +5,8 @@ class Room:
         self.myHasVisionPotion = hasVisionPotion
         self.myPillar = pillar  # can be "Abstraction", "Encapsulation", etc.
 
+
+
     def enter(self, hero):
         print("\n--- You entered a room ---")
         if self.myHasPit:
