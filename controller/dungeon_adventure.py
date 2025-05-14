@@ -1,6 +1,6 @@
 from model.dungeon import Dungeon
 from model.room import Room
-from model.hero import Warrior  # or Hero base class if no subclass yet
+from model.warrior import Warrior  # or Hero base class if no subclass yet
 
 class DungeonAdventure:
     def __init__(self):
