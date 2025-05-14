@@ -5,12 +5,14 @@ from model.dungeon_character import DungeonCharacter
 
 
 class Hero(DungeonCharacter, ABC):
-    def __init__(self, name, hp, dmg_min, dmg_max, speed, hit_chance, block_chance, skill_name):
+    def __init__(self, name, hp, dmg_min, dmg_max, speed, hit_chance, skill_name):
         super().__init__(name, hp, dmg_min, dmg_max, speed, hit_chance)
-        self._chance_to_block = block_chance
+        self._chance_to_block = 0
         self._skill = skill_name
 
+
     def get_chance_to_block(self):
+        self._chance_to_block = random.randint(1,10)
         return self._chance_to_block
 
     def get_skill(self):
