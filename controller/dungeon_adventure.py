@@ -29,18 +29,16 @@ class DungeonAdventure:
 
         self.print_hero_info()
 
-        ''' COllins can edit this'''
+
     def print_hero_info(self):
         print(f"\n--- Hero Stats ---")
         print(f"Name: {self.hero.name}")
-        print(f"HP: {self.hero.hit_points}")
-        print(f"Healing Potions: {self.hero.healing_potions}")
-        print(f"Vision Potions: {self.hero.vision_potions}")
+        print(f"HP: {self.hero.health_points}")
         print(f"Pillars Found: {self.hero.pillars_found}\n")
 
     def start_game(self):
         print("Game started! Use 'up', 'down', 'left', 'right' to move. Type 'quit' to exit.\n")
-        while self.hero.hit_points > 0:
+        while self.hero.health_points > 0:
             command = input("Move: ").strip().lower()
             if command == "quit":
                 print("Thanks for playing!")

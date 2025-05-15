@@ -4,8 +4,20 @@ from model.monster import Monster
 
 
 class Gremlin(Monster):
-    def __init__(self, name="Gremlin"):
-        super().__init__(name, 70, 15, 30, 5, 0.8, 0.4)
+    def __init__(self,name, damage_min, damage_max, attack_speed,hit_chance,heal_points):
+        super().__init__(name, damage_min, damage_max, attack_speed,hit_chance,heal_points)
+
+    def get_name(self):
+        return self._name
+
+    def get_chance_to_hit(self):
+        return self._chance_to_hit
+
+    def get_damage_min(self):
+        return self._damage_min
+
+    def get_damage_max(self):
+        return self._damage_max
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
@@ -14,3 +26,12 @@ class Gremlin(Monster):
             target.take_damage(damage)
         else:
             print(f"{self.get_name()}'s attack missed!")
+
+    def to_String(self) -> str:
+        result = ((("Name: " + self._name +
+                    "\nHP: " + str(self._health_points)) +
+                   "\nAttack speed: " + str(self._attack_speed) +
+                   "\nDamage min: " + str(self._damage_min)) +
+                  "\nDamage max: " + str(self._damage_max) +
+                  "\nChance to hit: " + str(self._chance_to_hit))
+        return result

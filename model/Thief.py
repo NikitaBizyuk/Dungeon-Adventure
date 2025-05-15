@@ -4,8 +4,8 @@ from model.hero import Hero
 
 
 class Thief(Hero):
-    def __init__(self, name):
-        super().__init__(name, 75, 20, 40, 6, 0.8, 0.4, "Surprise Attack")
+    def __init__(self,name, damage_min, damage_max, attack_speed, chance_to_hit):
+        super().__init__(name, damage_min, damage_max, attack_speed, chance_to_hit)
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
@@ -15,14 +15,16 @@ class Thief(Hero):
         else:
             print(f"{self.get_name()}'s attack missed!")
 
+#Thief special skill goes here
     def use_skill(self, target):
-        roll = random.random()
-        if roll < 0.4:
-            print(f"{self.get_name()} performs a surprise double attack!")
-            self.attack(target)
-            self.attack(target)
-        elif roll < 0.6:
-            print(f"{self.get_name()} was caught and failed to attack!")
-        else:
-            print(f"{self.get_name()} performs a normal attack.")
-            self.attack(target)
+        pass
+
+
+    def to_String(self) -> str:
+        result = ((("Name: " + self._name +
+                    "\nHP: " + str(self._health_points)) +
+                   "\nAttack speed: " + str(self._attack_speed) +
+                   "\nDamage min: " + str(self._damage_min)) +
+                  "\nDamage max: " + str(self._damage_max) +
+                  "\nChance to hit: " + str(self._chance_to_hit))
+        return result

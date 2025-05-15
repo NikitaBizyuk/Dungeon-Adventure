@@ -4,16 +4,16 @@ from model.dungeon_character import DungeonCharacter
 
 
 class Monster(DungeonCharacter):
-    def __init__(self, name, hp, dmg_min, dmg_max, speed, hit_chance, heal_chance):
-        super().__init__(name, hp, dmg_min, dmg_max, speed, hit_chance)
-        self._chance_to_heal = heal_chance
+    def __init__(self, name, damage_min, damage_max, speed, hit_chance, heal_points):
+        super().__init__(name, damage_min, damage_max, speed, hit_chance)
+        self._chance_to_heal = heal_points
 
-    def get_chance_to_heal(self):
-        return self._chance_to_heal
+    def set_health_points(self,num):
+        self._health_points = self._health_points + num
 
     def take_damage(self, amount):
         self.set_health_points(self.get_hit_points() - amount)
-        print(f"{self.get_name()} took {amount} damage.")
+        print("Monster" +  "took" + str(amount)+ " damage.")
         self.heal()
 
     def heal(self):
@@ -21,4 +21,6 @@ class Monster(DungeonCharacter):
             min_heal, max_heal = 20, 40
             heal_amount = random.randint(min_heal, max_heal)
             self.set_health_points(self.get_hit_points() + heal_amount)
-            print(f"{self.get_name()} healed for {heal_amount} HP!")
+            print("monster healed for" + str(heal_amount) +" HP!")
+    def get_heal_points(self):
+        return self._chance_to_heal

@@ -4,8 +4,8 @@ from model.hero import Hero
 
 
 class Priestess(Hero):
-    def __init__(self, name):
-        super().__init__(name, 75, 25, 45, 5, 0.7, 0.3, "Heal")
+    def __init__(self,name, damage_min, damage_max, attack_speed, chance_to_hit):
+        super().__init__(name, damage_min, damage_max, attack_speed, chance_to_hit)
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
@@ -15,7 +15,16 @@ class Priestess(Hero):
         else:
             print(f"{self.get_name()}'s attack missed!")
 
-    def use_skill(self, target=None):
-        heal_amount = random.randint(25, 40)
-        self.set_health_points(self.get_hit_points() + heal_amount)
-        print(f"{self.get_name()} healed herself for {heal_amount} HP.")
+## Priestess special skill goes here
+    def use_skill(self, target):
+        pass
+
+
+    def to_String(self) -> str:
+        result = ((("Name: " + self._name +
+                    "\nHP: " + str(self._health_points)) +
+                   "\nAttack speed: " + str(self._attack_speed) +
+                   "\nDamage min: " + str(self._damage_min)) +
+                  "\nDamage max: " + str(self._damage_max) +
+                  "\nChance to hit: " + str(self._chance_to_hit))
+        return result
