@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 import random
 
 class DungeonCharacter(ABC):
-    def __init__(self, name, health_points, damage_min, damage_max, attack_speed, chance_to_hit):
+    def __init__(self, name, damage_min, damage_max, attack_speed, chance_to_hit):
         self._name = name
-        self._health_points = health_points
+        self._health_points = 100
         self._damage_min = damage_min
         self._damage_max = damage_max
         self._attack_speed = attack_speed

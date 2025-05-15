@@ -4,8 +4,15 @@ from model.hero import Hero
 
 
 class Warrior(Hero):
-    def __init__(self, name):
-        super().__init__(name, 125, 35, 60, 4, 0.8, 0.2, "Crushing Blow")
+    def __init__(self,name, damage_min, damage_max, attack_speed, chance_to_hit):
+        super().__init__(name, damage_min, damage_max, attack_speed, chance_to_hit)
+        self.__name = name
+       ##self.__special_skill =
+        self.__attack_speed = attack_speed
+        self._damage_min = damage_min
+        self.__damage_max = damage_max
+        self._chance_to_hit = chance_to_hit
+
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
@@ -22,3 +29,16 @@ class Warrior(Hero):
             target.take_damage(damage)
         else:
             print(f"{self.get_name()}'s Crushing Blow missed!")
+
+    def special_skill(self) -> None:
+        print("PLACE SPECIAL SKILL HERE")
+        pass
+
+    def to_String(self) -> str:
+        result = ((("Name: " + self._name +
+                  "\nHP: " + str(self._health_points)) +
+                  "\nAttack speed: " + str(self.__attack_speed) +
+                  "\nDamage min: " + str(self._damage_min)) +
+                  "\nDamage max: " + str(self.__damage_max) +
+                  "\nChance to hit: " + str(self._chance_to_hit))
+        return result
