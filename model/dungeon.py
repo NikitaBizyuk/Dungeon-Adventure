@@ -74,4 +74,5 @@ class Dungeon:
         return result
 
 
-
+dungeon = Dungeon()
+print(dungeon.current_to_string())
