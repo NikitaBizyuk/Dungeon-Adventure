@@ -1,75 +1,62 @@
 import random
-from typing import List
-
+from model.room import Room
 
 class Dungeon:
+    def __init__(self, rows=5, cols=5):
+        self.rows = rows
+        self.cols = cols
+        self.rooms = [[Room(r, c) for c in range(cols)] for r in range(rows)]
+        self.entrance = (0, 0)
+        self.exit = (rows - 1, cols - 1)
+        self._generate_maze(0, 0)
+        self._place_special_rooms()
 
-    def __init__(self):
-        #myMazes stores 10 randomly generated mazes
-        self.__myMazes = self.create_mazes()
-        #gamePlayMaze stores the random maze that the player will see on the screen
-        #self.__gamePlayMaze = self.select_random_maze()
-        #myPositionX stores the players X position
-        self.__myPositionX = 1
-        #myPositionY stores the players Y position
-        self.__myPositionY = 1
+    def _generate_maze(self, r, c):
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Right, Down, Left, Up
+        random.shuffle(directions)
+        self.rooms[r][c].visited = True
 
-    """
-    create_mazes() scans 10 randomly generated mazes from a .txt file
-    and places the mazes in a 2D list. Every index position of the list
-    stores a maze. Size of maze and number of rooms vary.
-    """
-    def create_mazes(self) -> list[list[object]]:
-        result: list[list[object]] = []
-        try:
-            with open("random_mazes.txt", 'r') as file:
-                lines = file.readlines()
-                i = 0
-                while i < len(lines):
-                    row_col_line = lines[i].strip()
-                    if not row_col_line or not row_col_line[0].isdigit():
-                        i += 1
-                        continue
-                    try:
-                        parts = row_col_line.split()
-                        if len(parts) < 2:
-                            raise ValueError("Not enough values for rows and cols.")
-                        rows, cols = int(parts[0]), int(parts[1])
-                        i += 1
-                    except ValueError:
-                        print(f"Invalid row/col format at line {i + 1}: {lines[i]}")
-                        i += 1
-                        continue
-                    # Read the maze lines
-                    maze: list[object] = []
-                    for _ in range(rows):
-                        if i < len(lines):
-                            maze.append(lines[i].strip())
-                            print(lines[i])
-                            i += 1
-                    result.append(maze)
-        except FileNotFoundError:
-            print("File not found")
-        return result
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < self.rows and 0 <= nc < self.cols and not self.rooms[nr][nc].visited:
+                self._generate_maze(nr, nc)
 
-    def select_random_maze(self) -> list[object]:
-        maze = random.choice(self.__myMazes)
-        return maze
+    def _place_special_rooms(self):
+        # Place entrance and exit
+        self.rooms[0][0].is_entrance = True
+        self.rooms[self.exit[0]][self.exit[1]].is_exit = True
 
-    """
-    add_rooms will iterate through the gamePlayMaze and replace every
-    R character with a room object.
-    """
-    def add_rooms(self, rooms: list[object]) -> None:
-        # logic to add rooms goes here
-        pass
+        # Place 4 pillars randomly
+        pillars = ['A', 'E', 'I', 'P']
+        placed = 0
+        while placed < 4:
+            r = random.randint(0, self.rows - 1)
+            c = random.randint(0, self.cols - 1)
+            room = self.rooms[r][c]
+            if not room.is_entrance and not room.is_exit and room.pillar is None:
+                room.pillar = pillars[placed]
+                placed += 1
 
-    """
-    current_to_string displays the randomly selected
-    gamePlayMaze
-    """
-    def current_to_string(self) -> str:
-        result = "Current Maze\n"
-        for line in self.__gamePlayMaze:
-            result += line + "\n"
-        return result
+    def get_room(self, row, col):
+        return self.rooms[row][col]
+
+    def place_hero(self, hero, x, y):
+        # Clear previous hero markers
+        for row in self.rooms:
+            for room in row:
+                room.has_hero = False
+        self.rooms[x][y].enter(hero)
+
+    def print_dungeon(self):
+        for r in range(self.rows):
+            # Top walls (*** for boundary, *-* for internal)
+            top_line = ""
+            mid_line = ""
+            bot_line = ""
+            for c in range(self.cols):
+                top_line += "*-*   "
+                mid_line += f"|{self.rooms[r][c].display_center()}|   "
+                bot_line += "*-*   "
+            print(top_line)
+            print(mid_line)
+            print(bot_line + "\n")
