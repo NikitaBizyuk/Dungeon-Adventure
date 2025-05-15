@@ -1,36 +1,30 @@
+import random
 from abc import ABC, abstractmethod
-from dungeon_character import DungeonCharacter
+
+from model.dungeon_character import DungeonCharacter
 
 
-class Hero(ABC, DungeonCharacter):
-    """
-        Abstract base class representing a Hero character in the dungeon game.
+class Hero(DungeonCharacter, ABC):
+    def __init__(self, name,damage_min, damage_max, attack_speed, chance_to_hit):
+        super().__init__(name, damage_min, damage_max, attack_speed, chance_to_hit)
+        self._chance_to_block = 0
+        self._hp = 100
 
-        A Hero is a specialized type of DungeonCharacter with additional abilities
-        such as blocking attacks and using a unique skill. This class serves as a
-        blueprint for all specific hero types and cannot be instantiated directly.
 
-        Attributes:
-            _chance_to_block (float): The probability (0.0 to 1.0) that the hero can block an incoming attack.
-            _skill (str): The name or description of the hero's unique skill or ability.
 
-        Inherits:
-            DungeonCharacter: Base class with core combat attributes such as name, health points, damage range,
-                              attack speed, and chance to hit.
 
-        Args:
-            name (str): The hero's name.
-            health_points (int): The initial health value of the hero.
-            damage_min (int): Minimum damage the hero can deal.
-            damage_max (int): Maximum damage the hero can deal.
-            attack_speed (int): Number of attacks per round.
-            chance_to_hit (float): Probability (0.0 to 1.0) that the hero lands an attack.
-            chance_to_block (float): Probability (0.0 to 1.0) that the hero blocks an attack.
-            skill (str): Description of the hero’s special ability.
-        """
-    def __init__(self,name, health_points, damage_min,
-                 damage_max, attack_speed, chance_to_hit, chance_to_block, skill) -> None:
-        super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
-        self._chance_to_block = chance_to_block
-        self._skill = skill
+    def get_chance_to_block(self) -> float:
+        self._chance_to_block = random.uniform(0.85,1.0)
+        return self._chance_to_block
+
+    def set_chance_to_block(self, chance_to_block, num) -> None:
+        self._chance_to_block = chance_to_block + num
+
+
+    def take_damage(self, amount) -> None:
+        if random.random() < self._chance_to_block:
+            print(f"{self.get_name()} blocked the attack!")
+        else:
+            self.set_health_points(self.get_hit_points() - amount)
+            print(f"{self.get_name()} took {amount} damage.")
 
