@@ -9,7 +9,7 @@ class DungeonAdventure:
         self.hero_y = 0
         self.dungeon.place_hero(self.hero, self.hero_x, self.hero_y)
 
-    def moveHero(self, direction):
+    def move_hero(self, direction):
         dx, dy = 0, 0
         if direction == "up":
             dx = -1
@@ -28,6 +28,7 @@ class DungeonAdventure:
         room.enter(self.hero)
 
         self.print_hero_info()
+        self.dungeon.print_dungeon()
 
 
     def print_hero_info(self):
