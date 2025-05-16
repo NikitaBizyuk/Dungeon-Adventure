@@ -1,11 +1,12 @@
 import random
+from abc import ABC
 
 from model.dungeon_character import DungeonCharacter
 
 
-class Monster(DungeonCharacter):
-    def __init__(self, name, damage_min, damage_max, speed, hit_chance, heal_points):
-        super().__init__(name, damage_min, damage_max, speed, hit_chance)
+class Monster(DungeonCharacter, ABC):
+    def __init__(self, name, damage_min, damage_max, speed, heal_points ,chance_to_hit):
+        super().__init__(name, damage_min, damage_max, speed,heal_points, chance_to_hit)
         self._chance_to_heal = heal_points
 
     def set_health_points(self,num):

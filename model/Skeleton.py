@@ -4,7 +4,13 @@ from model.monster import Monster
 
 
 class Skeleton(Monster):
-    def __init__(self,name, damage_min, damage_max, attack_speed,hit_chance,heal_points):
+    def __init__(self,name):
+        name = name
+        damage_min = 30
+        damage_max = 60
+        attack_speed = 3
+        hit_chance = 50
+        heal_points = 40
         super().__init__(name, damage_min, damage_max, attack_speed,hit_chance,heal_points)
 
     def get_name(self):

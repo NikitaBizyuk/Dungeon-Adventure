@@ -1,4 +1,5 @@
 import random
+import os
 from typing import List
 
 
@@ -8,7 +9,7 @@ class Dungeon:
         #myMazes stores 10 randomly generated mazes
         self.__myMazes = self.create_mazes()
         #gamePlayMaze stores the random maze that the player will see on the screen
-        #self.__gamePlayMaze = self.select_random_maze()
+        self.__gamePlayMaze = self.select_random_maze()
         #myPositionX stores the players X position
         self.__myPositionX = 1
         #myPositionY stores the players Y position
@@ -22,7 +23,9 @@ class Dungeon:
     def create_mazes(self) -> list[list[object]]:
         result: list[list[object]] = []
         try:
-            with open("random_mazes.txt", 'r') as file:
+            current_dir = os.path.dirname(__file__)
+            file_path = os.path.join(current_dir, "random_mazes.txt")
+            with open(file_path, 'r') as file:
                 lines = file.readlines()
                 i = 0
                 while i < len(lines):
@@ -45,7 +48,7 @@ class Dungeon:
                     for _ in range(rows):
                         if i < len(lines):
                             maze.append(lines[i].strip())
-                            print(lines[i])
+
                             i += 1
                     result.append(maze)
         except FileNotFoundError:

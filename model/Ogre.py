@@ -5,8 +5,15 @@ from model.monster import Monster
 
 class Ogre(Monster):
 
-    def __init__(self,name, damage_min, damage_max, attack_speed,hit_chance,heal_points):
-        super().__init__(name, damage_min, damage_max, attack_speed,hit_chance,heal_points)
+    def __init__(self,name):
+        name = name
+        damage_min = 30
+        damage_max = 60
+        attack_speed = 2
+        hit_points = 200
+        heal_points = 60
+        chance_to_hit = 10
+        super().__init__(name, damage_min, damage_max, attack_speed,hit_points,heal_points)
 
     def attack(self, target):
         if random.random() < self.get_chance_to_hit():
