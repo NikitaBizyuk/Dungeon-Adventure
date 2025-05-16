@@ -5,7 +5,7 @@ from model.hero import Hero
 
 class Priestess(Hero):
     def __init__(self,name):
-        name = name
+
         health_points = 100
         chance_to_hit = 75
         attack_speed = 5
