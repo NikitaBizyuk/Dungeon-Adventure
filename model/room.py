@@ -54,7 +54,7 @@ class Room:
         elif self.has_healing_potion and self.has_vision_potion:
             return 'M'
         elif self.has_healing_potion:
-            return 'H'
+            return 'C'
         elif self.has_vision_potion:
             return 'V'
         return ' '
