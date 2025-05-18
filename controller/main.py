@@ -37,23 +37,9 @@ if __name__ == "__main__":
 from dungeon_adventure import DungeonAdventure
 
 def main():
-   """ game = DungeonAdventure()
-    game.start_game()
-    """
-   my_dungeon = Dungeon()
-   print(my_dungeon.current_to_string())
-   my_priestess = Priestess("priestess")
-   my_warrior = Warrior("warrior")
-   my_thief = Thief("Thief")
-   print(my_priestess.to_string() + "\n")
-   print(my_warrior.to_string() + "\n")
-   print(my_thief.to_String() + "\n")
-   my_gremlin = Gremlin("Gremlin")
-   print(my_gremlin.to_String() + "\n")
-   my_ogre = Ogre("Ogre")
-   my_skeleton = Skeleton("Skeleton")
-   print(my_ogre.to_String() + "\n")
-   print(my_skeleton.to_String() + "\n")
+   game = DungeonAdventure()
+   game.start_game()
+
 
 if __name__ == "__main__":
     main()
