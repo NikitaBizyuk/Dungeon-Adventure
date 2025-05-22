@@ -4,25 +4,32 @@ from model.hero import Hero
 
 
 class Thief(Hero):
-    def __init__(self, name):
-        super().__init__(name, 75, 20, 40, 6, 0.8, 0.4, "Surprise Attack")
+    def __init__(self,name):
+        health_points = 125
+        damage_min = 20
+        damage_max = 40
+        attack_speed = 6
+        chance_to_hit = 0.8
+        super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
     def attack(self, target):
-        if random.random() < self.get_chance_to_hit():
-            damage = random.randint(self.get_damage_min(), self.get_damage_max())
-            print(f"{self.get_name()} attacks for {damage} damage.")
+        if random.random() < self.chance_to_hit:
+            damage = random.randint(self.damage_min(), self.damage_max())
+            print(f"{self.name()} attacks for {damage} damage.")
             target.take_damage(damage)
         else:
-            print(f"{self.get_name()}'s attack missed!")
+            print(f"{self.name()}'s attack missed!")
 
-    def use_skill(self, target):
-        roll = random.random()
-        if roll < 0.4:
-            print(f"{self.get_name()} performs a surprise double attack!")
-            self.attack(target)
-            self.attack(target)
-        elif roll < 0.6:
-            print(f"{self.get_name()} was caught and failed to attack!")
-        else:
-            print(f"{self.get_name()} performs a normal attack.")
-            self.attack(target)
+#Thief special skill goes here
+    def special_skill(self, target):
+        pass
+
+
+    def to_String(self) -> str:
+        result = ((("Name: " + self._name +
+                    "\nHP: " + str(self._health_points)) +
+                   "\nAttack speed: " + str(self._attack_speed) +
+                   "\nDamage min: " + str(self._damage_min)) +
+                  "\nDamage max: " + str(self._damage_max) +
+                  "\nChance to hit: " + str(self._chance_to_hit))
+        return result
