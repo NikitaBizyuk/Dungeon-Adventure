@@ -1,9 +1,10 @@
+
 from model.dungeon import Dungeon
 from model.warrior import Warrior
 
 class DungeonAdventure:
-    def __init__(self):
-        self.dungeon = Dungeon(rows=11, cols=11)
+    def __init__(self, view_rows=15, view_cols=15):
+        self.dungeon = Dungeon(rows=51, cols=51, view_rows=view_rows, view_cols=view_cols)
         self.hero = Warrior("Rudy")
         self.in_room = False
         self.active_room = None
