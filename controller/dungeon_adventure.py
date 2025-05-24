@@ -1,16 +1,24 @@
-
 from model.dungeon import Dungeon
 from model.warrior import Warrior
 
 class DungeonAdventure:
-    def __init__(self, view_rows=15, view_cols=15):
-        self.dungeon = Dungeon(rows=51, cols=51, view_rows=view_rows, view_cols=view_cols)
+    def __init__(self):
+        self.dungeon = Dungeon(rows=61, cols=61, difficulty="large")
         self.hero = Warrior("Rudy")
         self.in_room = False
         self.active_room = None
+        self.dx = 1
+        self.dy = 1
 
     def move_hero(self, dx, dy):
-        if not self.in_room:
+        if self.dungeon.in_room:
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy)
+            if status == "exit":
+                self.dungeon.in_room = False
+                self.dungeon.active_room = None
+                self.in_room = False
+                self.active_room = None
+        else:
             self.dungeon.move_hero(dx, dy)
             if self.dungeon.in_room:
                 self.in_room = True
@@ -20,3 +28,9 @@ class DungeonAdventure:
         self.in_room = False
         self.dungeon.in_room = False
         self.active_room = None
+
+    def get_dx(self):
+        return self.dx
+
+    def get_dy(self):
+        return self.dy

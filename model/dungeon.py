@@ -1,3 +1,5 @@
+# Handcrafted Dungeon Maze Generator – Unique Layout with True Path and Room Diversity
+
 import random
 from model.room import Room
 from model.maze_cell import MazeCell
@@ -14,6 +16,7 @@ class Dungeon:
         self.active_room = None
         self.view_rows = view_rows
         self.view_cols = view_cols
+        self.room_exit_point = None
 
         self.room_count = 8 if difficulty == "small" else 20
         self.room_templates = self._define_room_templates()
@@ -27,8 +30,8 @@ class Dungeon:
 
     def _define_room_templates(self):
         return [
-            (3, 3), (5, 5), (3, 5), (5, 3), (4, 6), (6, 4),  # rectangles
-            (6, 6), (4, 4),  # squares
+            (3, 3), (5, 5), (3, 5), (5, 3), (4, 6), (6, 4),
+            (6, 6), (4, 4),
         ]
 
     def _generate_handcrafted_layout(self):
@@ -126,16 +129,22 @@ class Dungeon:
                     self.maze[x][y].explored = True
 
     def move_hero(self, dx, dy):
-        nx, ny = self.hero_x + dx, self.hero_y + dy
-        if 0 <= nx < self.rows and 0 <= ny < self.cols:
-            target = self.maze[nx][ny]
-            if target.cell_type in ["hallway", "door", "exit"]:
-                self.hero_x, self.hero_y = nx, ny
-                self.update_visibility()
-                if target.cell_type == "door":
-                    room = self.rooms[target.door_id]
-                    room.enter(None)
-                    self.in_room = True
-                    self.active_room = room
-                elif target.cell_type == "exit":
-                    print("Reached exit!")
+        if self.in_room:
+            status = self.active_room.move_hero_in_room(dx, dy)
+            if status == "exit":
+                self.in_room = False
+                self.active_room = None
+        else:
+            nx, ny = self.hero_x + dx, self.hero_y + dy
+            if 0 <= nx < self.rows and 0 <= ny < self.cols:
+                target = self.maze[nx][ny]
+                if target.cell_type in ["hallway", "door", "exit"]:
+                    self.hero_x, self.hero_y = nx, ny
+                    self.update_visibility()
+                    if target.cell_type == "door":
+                        room = self.rooms[target.door_id]
+                        self.in_room = True
+                        self.active_room = room
+                        print(f"Entered room at door {target.door_id}")
+                    elif target.cell_type == "exit":
+                        print("Reached exit!")

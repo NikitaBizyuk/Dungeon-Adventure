@@ -12,8 +12,8 @@ class GameView:
 
         start_r = max(0, min(dungeon.rows - view_rows, hero_x - view_rows // 2))
         start_c = max(0, min(dungeon.cols - view_cols, hero_y - view_cols // 2))
-        end_r = start_r + view_rows
-        end_c = start_c + view_cols
+        end_r = min(start_r + view_rows, dungeon.rows)
+        end_c = min(start_c + view_cols, dungeon.cols)
 
         base_colors = {
             "wall": (30, 30, 30),
@@ -30,10 +30,10 @@ class GameView:
                 rect = pygame.Rect(screen_x, screen_y, self.cell_size, self.cell_size)
 
                 if not cell.explored:
-                    color = (0, 0, 0)  # unseen
+                    color = (0, 0, 0)
                 elif not cell.visible:
                     base = base_colors.get(cell.cell_type, (100, 100, 100))
-                    color = tuple(int(x * 0.35) for x in base)  # darkened explored
+                    color = tuple(int(x * 0.35) for x in base)
                 else:
                     color = base_colors.get(cell.cell_type, (255, 0, 255))
 
@@ -43,9 +43,30 @@ class GameView:
                     pygame.draw.circle(self.screen, (255, 0, 0), rect.center, self.cell_size // 3)
 
     def draw_room(self, room, width, height):
-        self.screen.fill((30, 30, 30))
-        pygame.draw.rect(self.screen, (200, 200, 200), pygame.Rect(100, 100, width - 200, height - 200))
-        pygame.draw.circle(self.screen, (255, 0, 0), (width // 2, height // 2), 20)
-        font = pygame.font.SysFont(None, 36)
-        text = font.render("In Room! Press Q to return.", True, (255, 255, 255))
-        self.screen.blit(text, (width // 2 - 120, 60))
+        view_rows = self.view_rows
+        view_cols = self.view_cols
+
+        hero_r, hero_c = room.get_hero_position()
+        start_r = max(0, min(max(0, room.height - view_rows), hero_r - view_rows // 2))
+        start_c = max(0, min(max(0, room.width - view_cols), hero_c - view_cols // 2))
+        end_r = min(start_r + view_rows, room.height)
+        end_c = min(start_c + view_cols, room.width)
+
+        base_colors = {
+            "wall": (40, 40, 40),
+            "floor": (230, 230, 230),
+            "door": (0, 128, 255)
+        }
+
+        for r in range(start_r, end_r):
+            for c in range(start_c, end_c):
+                tile = room.get_tile(r, c)
+                screen_x = (c - start_c) * self.cell_size
+                screen_y = (r - start_r) * self.cell_size
+                rect = pygame.Rect(screen_x, screen_y, self.cell_size, self.cell_size)
+                color = base_colors.get(tile, (255, 0, 255))
+                pygame.draw.rect(self.screen, color, rect)
+
+        center = ((hero_c - start_c) * self.cell_size + self.cell_size // 2,
+                  (hero_r - start_r) * self.cell_size + self.cell_size // 2)
+        pygame.draw.circle(self.screen, (255, 0, 0), center, self.cell_size // 3)
