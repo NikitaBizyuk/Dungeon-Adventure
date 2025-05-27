@@ -1,7 +1,8 @@
 import random
 
-from model import Ogre, Skeleton, Gremlin
-from model.monster import Monster
+from model.Ogre import Ogre
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
 
 class MonsterFactory:
     @staticmethod
@@ -16,8 +17,8 @@ class MonsterFactory:
 
     @staticmethod
     def create_skeleton(name):
-        skeleton = Skeleton(name)
-        return skeleton
+        my_skeleton = Skeleton(name)
+        return my_skeleton
 
     @staticmethod
     def create_gremlin(name):
