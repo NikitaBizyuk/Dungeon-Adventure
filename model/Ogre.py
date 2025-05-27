@@ -6,7 +6,6 @@ from model.monster import Monster
 class Ogre(Monster):
 
     def __init__(self,name):
-        name = name
         damage_min = 30
         damage_max = 60
         attack_speed = 2

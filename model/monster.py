@@ -14,7 +14,7 @@ class Monster(DungeonCharacter, ABC):
 
     def take_damage(self, amount):
         self.set_health_points(self.get_hit_points() - amount)
-        print("Monster" +  "took" + str(amount)+ " damage.")
+        print("Monster took" + str(amount)+ " damage.")
         self.heal()
 
     def heal(self):

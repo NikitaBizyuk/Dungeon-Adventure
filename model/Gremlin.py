@@ -5,7 +5,6 @@ from model.monster import Monster
 
 class Gremlin(Monster):
     def __init__(self,name):
-        name = name
         damage_min = 15
         damage_max = 30
         attack_speed = 5

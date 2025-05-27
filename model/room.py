@@ -16,7 +16,6 @@ class Room:
         self.visited = False
 
 
-
     def enter(self, hero):
         self.has_hero = True
         print(f"\nYou entered room at ({self.row}, {self.col})")
