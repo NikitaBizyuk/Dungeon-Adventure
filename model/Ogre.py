@@ -5,8 +5,7 @@ from model.monster import Monster
 
 class Ogre(Monster):
 
-    def __init__(self,name):
-        name = name
+    def __init__(self,name = "OGREBOGRE"):
         damage_min = 30
         damage_max = 60
         attack_speed = 2
@@ -16,23 +15,23 @@ class Ogre(Monster):
         super().__init__(name, damage_min, damage_max, attack_speed,hit_points,heal_points)
 
     def attack(self, target):
-        if random.random() < self.get_chance_to_hit():
-            damage = random.randint(self.get_damage_min(), self.get_damage_max())
+        if random.random() < self.chance_to_hit():
+            damage = random.randint(self.damage_min(), self.get_damage_max())
             print(" Ogre slams for" + str(damage) + " damage.")
             target.take_damage(damage)
         else:
             print("Ogre's slam missed!")
 
-
-    def get_name(self):
+    @property
+    def name(self):
         return self._name
-
-    def get_chance_to_hit(self):
+    @property
+    def chance_to_hit(self):
         return self._chance_to_hit
-
-    def get_damage_min(self):
+    @property
+    def damage_min(self):
         return self._damage_min
-
+    @property
     def get_damage_max(self):
         return self._damage_max
 
