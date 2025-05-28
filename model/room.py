@@ -1,5 +1,5 @@
 import random
-
+from model.OOPillars import OOPillars
 class Room:
     def __init__(self, row, col):
         self.row = row
@@ -10,7 +10,7 @@ class Room:
         self.has_healing_potion = random.random() < 0.1
         self.has_vision_potion = random.random() < 0.1
         self.has_hero = False
-        self.pillar = None  # 'A', 'E', 'I', 'P' or None
+        self.pillar =  random.choice(list(OOPillars))# 'A', 'E', 'I', 'P' or None
         self.is_entrance = False
         self.is_exit = False
         self.visited = False

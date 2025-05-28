@@ -4,24 +4,24 @@ from model.monster import Monster
 
 
 class Gremlin(Monster):
-    def __init__(self,name):
+    def __init__(self,name = "GARGOYLEMLIN"):
         damage_min = 15
         damage_max = 30
         attack_speed = 5
         chance_to_hit = .4
         heal_points = 40
         super().__init__(name, damage_min, damage_max, attack_speed,chance_to_hit,heal_points)
-
-    def get_name(self):
+    @property
+    def name(self):
         return self._name
-
-    def get_chance_to_hit(self):
+    @property
+    def chance_to_hit(self):
         return self._chance_to_hit
-
-    def get_damage_min(self):
+    @property
+    def damage_min(self):
         return self._damage_min
-
-    def get_damage_max(self):
+    @property
+    def damage_max(self):
         return self._damage_max
 
     def attack(self, target):

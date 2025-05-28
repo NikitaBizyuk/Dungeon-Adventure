@@ -18,7 +18,7 @@ class GameView:
         base_colors = {
             "wall": (30, 30, 30),
             "hallway": (220, 220, 220),
-            "door": (0, 128, 255),
+            "door": (15, 128, 255),
             "exit": (0, 255, 128)
         }
 

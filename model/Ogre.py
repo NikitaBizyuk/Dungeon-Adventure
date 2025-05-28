@@ -5,7 +5,7 @@ from model.monster import Monster
 
 class Ogre(Monster):
 
-    def __init__(self,name):
+    def __init__(self,name = "OGREBOGRE"):
         damage_min = 30
         damage_max = 60
         attack_speed = 2
@@ -22,16 +22,16 @@ class Ogre(Monster):
         else:
             print("Ogre's slam missed!")
 
-
-    def get_name(self):
+    @property
+    def name(self):
         return self._name
-
-    def get_chance_to_hit(self):
+    @property
+    def chance_to_hit(self):
         return self._chance_to_hit
-
-    def get_damage_min(self):
+    @property
+    def damage_min(self):
         return self._damage_min
-
+    @property
     def get_damage_max(self):
         return self._damage_max
 
