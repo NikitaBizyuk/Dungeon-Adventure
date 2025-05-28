@@ -7,8 +7,6 @@ class DungeonAdventure:
         self.hero = Warrior("Rudy")
         self.in_room = False
         self.active_room = None
-        self.dx = 1
-        self.dy = 1
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
@@ -28,9 +26,3 @@ class DungeonAdventure:
         self.in_room = False
         self.dungeon.in_room = False
         self.active_room = None
-
-    def get_dx(self):
-        return self.dx
-
-    def get_dy(self):
-        return self.dy

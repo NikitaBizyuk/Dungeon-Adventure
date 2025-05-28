@@ -39,3 +39,24 @@ class Room:
 
     def get_dimensions(self):
         return self.height, self.width
+    #
+    # def toString(self):
+    #     result = ""
+    #     for r in range(15):
+    #         for c in range(100):
+    #             # Top and bottom borders
+    #             if r == 0 or r == 14:
+    #                 result += "*"
+    #             # Side borders
+    #             elif c == 0 or c == 99:
+    #                 result += "*"
+    #             elif c == 50 and r == 14:
+    #                 result += "_"  # door in the middle bottom
+    #
+    #             # Interior space
+    #             else:
+    #                 result += " "
+    #         result += "\n"
+    #     return result
+
+

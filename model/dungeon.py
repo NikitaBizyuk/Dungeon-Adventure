@@ -1,5 +1,3 @@
-# Handcrafted Dungeon Maze Generator – Unique Layout with True Path and Room Diversity
-
 import random
 from model.room import Room
 from model.maze_cell import MazeCell

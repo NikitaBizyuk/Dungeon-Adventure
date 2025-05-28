@@ -4,6 +4,8 @@ from view.game_view import GameView
 
 
 def main():
+
+
     pygame.init()
 
     info = pygame.display.Info()
