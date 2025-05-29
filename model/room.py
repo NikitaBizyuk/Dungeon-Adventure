@@ -1,5 +1,3 @@
-# Expanded Room class for in-room movement and layout
-
 class Room:
     def __init__(self, door_r, door_c, width=25, height=15):
         self.width = width
@@ -60,3 +58,4 @@ class Room:
     #     return result
 
 
+#__repr__

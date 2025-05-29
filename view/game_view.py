@@ -18,10 +18,10 @@ class GameView:
         base_colors = {
             "wall": (30, 30, 30),
             "hallway": (220, 220, 220),
-            "door": (15, 128, 255),
+            "door": (0, 128, 255),
             "exit": (0, 255, 128)
         }
-
+    #update varianles better
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 cell = dungeon.maze[r][c]
@@ -61,9 +61,17 @@ class GameView:
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 tile = room.get_tile(r, c)
-                screen_x = (c - start_c) * self.cell_size
-                screen_y = (r - start_r) * self.cell_size
-                rect = pygame.Rect(screen_x, screen_y, self.cell_size, self.cell_size)
+                room_tile_width = end_c - start_c
+                room_tile_height = end_r - start_r
+
+                cell_w = width // room_tile_width
+                cell_h = height // room_tile_height
+                cell_size = min(cell_w, cell_h)  # Make tiles square
+
+                screen_x = (c - start_c) * cell_size
+                screen_y = (r - start_r) * cell_size
+                rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
+
                 color = base_colors.get(tile, (255, 0, 255))
                 pygame.draw.rect(self.screen, color, rect)
 
