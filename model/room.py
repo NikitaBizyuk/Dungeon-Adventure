@@ -1,3 +1,12 @@
+import pygame
+
+from model.MonsterFactory import MonsterFactory
+import random
+from model.MonsterFactory import MonsterFactory
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
+from model.Ogre import Ogre
+
 class Room:
     def __init__(self, door_r, door_c, width=25, height=15):
         self.width = width
@@ -7,8 +16,14 @@ class Room:
         self.hero_c = width // 2
         self.door_r = height - 1  # door is now on the bottom row
         self.door_c = width // 2
-
         self._carve_layout()
+        self.num_monsters = random.randint(3,10)
+        self.monsters = {
+            MonsterFactory.create_random_monster(): (
+            random.randint(1, height - 2), random.randint(1, width - 2))
+            for _ in range(self.num_monsters)
+        }
+
 
     def _carve_layout(self):
         for r in range(1, self.height - 1):
@@ -16,6 +31,29 @@ class Room:
                 self.grid[r][c] = "floor"
         self.grid[self.door_r][self.door_c] = "door"
         self.grid[self.hero_r][self.hero_c] = "floor"
+
+    def move_monsters(self):
+        cntr = 0
+        for monster in self.monsters:
+            r, c = self.monsters[monster]
+            dr = 1 if r < self.hero_r else -1 if r > self.hero_r else 0
+            dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
+            new_r = r + dr
+            new_c = c + dc
+            if random.randint(1,100) % 7 == 0:
+                new_r += 1
+            if random.randint(1,100) % 9 == 0:
+                new_r += 1
+            if random.randint(1,100) % 4 == 0:
+                new_c += 1
+            if random.randint(1,100) % 9 == 0:
+                new_c += 1
+            cntr += 1
+            # Check if within bounds and walkable
+            if 0 <= new_r < self.height and 0 <= new_c < self.width:
+                if self.grid[new_r][new_c] in ["floor", "door"]:
+                    self.monsters[monster] = (new_r, new_c)
+        return None
 
     def move_hero_in_room(self, dx, dy):
         nr = self.hero_r + dx
@@ -37,6 +75,8 @@ class Room:
 
     def get_dimensions(self):
         return self.height, self.width
+    def get_monsters(self):
+        return self.monsters
     #
     # def toString(self):
     #     result = ""

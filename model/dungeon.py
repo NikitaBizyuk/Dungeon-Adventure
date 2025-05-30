@@ -129,6 +129,7 @@ class Dungeon:
     def move_hero(self, dx, dy):
         if self.in_room:
             status = self.active_room.move_hero_in_room(dx, dy)
+            self.active_room.move_monsters(dx, dy)
             if status == "exit":
                 self.in_room = False
                 self.active_room = None

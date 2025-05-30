@@ -1,4 +1,7 @@
 import pygame
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
+from model.Ogre import Ogre
 
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
@@ -6,6 +9,7 @@ class GameView:
         self.cell_size = cell_size
         self.view_rows = view_rows
         self.view_cols = view_cols
+
 
     def draw_maze(self, dungeon, hero_x, hero_y):
         view_rows, view_cols = self.view_rows, self.view_cols
@@ -47,6 +51,7 @@ class GameView:
         view_cols = self.view_cols
 
         hero_r, hero_c = room.get_hero_position()
+        monsters = room.get_monsters()
         start_r = max(0, min(max(0, room.height - view_rows), hero_r - view_rows // 2))
         start_c = max(0, min(max(0, room.width - view_cols), hero_c - view_cols // 2))
         end_r = min(start_r + view_rows, room.height)
@@ -77,4 +82,18 @@ class GameView:
 
         center = ((hero_c - start_c) * self.cell_size + self.cell_size // 2,
                   (hero_r - start_r) * self.cell_size + self.cell_size // 2)
-        pygame.draw.circle(self.screen, (255, 0, 0), center, self.cell_size // 3)
+        pygame.draw.circle(self.screen, (250, 0, 0), center, self.cell_size // 3)
+        for monster, (mr, mc) in monsters.items():
+            screen_x = (mc - start_c) * self.cell_size
+            screen_y = (mr - start_r) * self.cell_size
+            if isinstance(monster, Ogre):
+                pygame.draw.circle(self.screen, (0, 250,0),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+            if isinstance(monster, Skeleton):
+                pygame.draw.circle(self.screen, (0, 0, 0),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+            if isinstance(monster, Gremlin):
+                pygame.draw.circle(self.screen, (0,0 , 250),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+
+

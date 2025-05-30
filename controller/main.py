@@ -1,6 +1,9 @@
+from xml.dom.minidom import ReadOnlySequentialNamedNodeMap
+
 import pygame
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
+from model.room import Room
 
 
 def main():
@@ -21,9 +24,10 @@ def main():
     view = GameView(screen, CELL_SIZE, view_rows=FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
 
 
-    last_move_time = 0
+
     # If you have a lot of tuning values put them in a config file so you can just change it from there
-    move_delay = 150  # ms
+    hero_last_move_time = 0
+    hero_move_delay = 150  # ms
     running = True
 
     while running:
@@ -46,15 +50,17 @@ def main():
             dy -= 1
         if keys[pygame.K_d]:
             dy += 1
-
+        game.move_monsters()
         if dx != 0 or dy != 0:
             current_time = pygame.time.get_ticks()
-            if current_time - last_move_time >= move_delay:
+            if current_time - hero_last_move_time >= hero_move_delay:
                 game.move_hero(dx, dy)
-                last_move_time = current_time
+               # game.move_monsters()
+                hero_last_move_time = current_time
 
         if game.in_room:
             view.draw_room(game.active_room, WIDTH, HEIGHT)
+            room = Room
         else:
             view.draw_maze(game.dungeon, game.dungeon.hero_x, game.dungeon.hero_y)
 
