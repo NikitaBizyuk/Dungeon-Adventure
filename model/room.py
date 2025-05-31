@@ -51,6 +51,8 @@ class Room:
             dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
             new_r = r + dr
             new_c = c + dc
+            if (new_r, new_c) == (self.hero_r,self.hero_c):
+                continue
             if (new_r, new_c) in self.monsters.values():
                 continue
             if random.randint(1,100) % 7 == 0:
