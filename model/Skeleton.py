@@ -26,12 +26,12 @@ class Skeleton(Monster):
         return self._damage_max
 
     def attack(self, target):
-        if random.random() < self.get_chance_to_hit():
-            damage = random.randint(self.get_damage_min(), self.get_damage_max())
+        if random.random() < self.chance_to_hit():
+            damage = random.randint(self.damage_min(), self.damage_max())
             print(" slashes for" + str(damage) + "damage.")
             target.take_damage(damage)
         else:
-            print(f"{self.get_name()}'s slash missed!")
+            print(f"{self.name()}'s slash missed!")
 
     def to_String(self) -> str:
         result = ((("Name: " + self._name +

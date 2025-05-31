@@ -10,6 +10,7 @@ class Gremlin(Monster):
         attack_speed = 5
         chance_to_hit = .4
         heal_points = 40
+
         super().__init__(name, damage_min, damage_max, attack_speed,chance_to_hit,heal_points)
     @property
     def name(self):
@@ -25,12 +26,12 @@ class Gremlin(Monster):
         return self._damage_max
 
     def attack(self, target):
-        if random.random() < self.get_chance_to_hit():
-            damage = random.randint(self.get_damage_min(), self.get_damage_max())
-            print(f"{self.get_name()} scratches for {damage} damage.")
+        if random.random() < self.chance_to_hit():
+            damage = random.randint(self.damage_min(), self.damage_max())
+            print(f"{self.name()} scratches for {damage} damage.")
             target.take_damage(damage)
         else:
-            print(f"{self.get_name()}'s attack missed!")
+            print(f"{self.name()}'s attack missed!")
 
     def to_String(self) -> str:
         result = ((("Name: " + self._name +

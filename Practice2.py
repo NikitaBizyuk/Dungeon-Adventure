@@ -61,9 +61,7 @@ class BankAccount:
         return 0 <= rate <=5
     def _is_valid_amount(self, amount):
         return amount > 0
-
-
-
+    
     def __log_transaction(self, transaction_type, amount):
         print(f"Logging the: {transaction_type} of $ {amount}. New Balance: $ {self._balance} ")
     

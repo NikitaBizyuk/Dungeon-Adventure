@@ -13,7 +13,7 @@ class Monster(DungeonCharacter, ABC):
         self._health_points = self._health_points + num
 
     def take_damage(self, amount):
-        self.set_health_points(self.get_hit_points() - amount)
+        self.set_health_points(self.health_points() - amount)
         print("Monster took" + str(amount)+ " damage.")
         self.heal()
 
@@ -21,7 +21,7 @@ class Monster(DungeonCharacter, ABC):
         if self.is_alive() and random.random() < self._chance_to_heal:
             min_heal, max_heal = 20, 40
             heal_amount = random.randint(min_heal, max_heal)
-            self.set_health_points(self.get_hit_points() + heal_amount)
+            self.set_health_points(self.health_points() + heal_amount)
             print("monster healed for" + str(heal_amount) +" HP!")
     def get_heal_points(self):
         return self._chance_to_heal

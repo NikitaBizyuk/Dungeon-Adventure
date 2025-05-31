@@ -15,8 +15,8 @@ class Ogre(Monster):
         super().__init__(name, damage_min, damage_max, attack_speed,hit_points,heal_points)
 
     def attack(self, target):
-        if random.random() < self.get_chance_to_hit():
-            damage = random.randint(self.get_damage_min(), self.get_damage_max())
+        if random.random() < self.chance_to_hit():
+            damage = random.randint(self.damage_min(), self.get_damage_max())
             print(" Ogre slams for" + str(damage) + " damage.")
             target.take_damage(damage)
         else:
