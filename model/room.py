@@ -8,6 +8,9 @@ from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 
 class Room:
+    room_ID = 0
+    loot = ["Encapsulation", "Abstraction","Polymorphism",
+            "Inheritance","Health Potion","Vision Potion"]
     def __init__(self, door_r, door_c, width=25, height=15):
         self.width = width
         self.height = height
@@ -23,12 +26,20 @@ class Room:
             random.randint(1, height - 2), random.randint(1, width - 2))
             for _ in range(self.num_monsters)
         }
+        random.shuffle(Room.loot)
+        Room.room_ID +=1
 
 
     def _carve_layout(self):
         for r in range(1, self.height - 1):
             for c in range(1, self.width - 1):
-                self.grid[r][c] = "floor"
+                if r == (self.height - 1)/2 and c == (self.width - 1)/2:
+                    self.grid[r][c] = Room.loot[0]
+                    if (Room.loot[0] == "Encapsulation" or Room.loot[0] == "Abstraction" or
+                        Room.loot[0] == "Polymorphism" or Room.loot[0] == "Inheritance"):
+                        Room.loot.pop(0)
+                else:
+                    self.grid[r][c] = "floor"
         self.grid[self.door_r][self.door_c] = "door"
         self.grid[self.hero_r][self.hero_c] = "floor"
 
@@ -40,6 +51,8 @@ class Room:
             dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
             new_r = r + dr
             new_c = c + dc
+            if (new_r, new_c) in self.monsters.values():
+                continue
             if random.randint(1,100) % 7 == 0:
                 new_r += 1
             if random.randint(1,100) % 9 == 0:

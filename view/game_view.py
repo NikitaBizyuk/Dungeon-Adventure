@@ -9,7 +9,7 @@ class GameView:
         self.cell_size = cell_size
         self.view_rows = view_rows
         self.view_cols = view_cols
-
+       # self.font = pygame.font.SysFont(None, 24)
 
     def draw_maze(self, dungeon, hero_x, hero_y):
         view_rows, view_cols = self.view_rows, self.view_cols
@@ -60,7 +60,13 @@ class GameView:
         base_colors = {
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
-            "door": (0, 128, 255)
+            "door": (0, 128, 255),
+            "Encapsulation": (255, 215, 0),
+            "Polymorphism": (255, 215, 0),
+            "Abstraction": (255, 215, 0),
+            "Inheritance": (255, 215, 0),
+            "Health Potion": (255, 192, 203),
+            "Vision Potion": (255, 192, 203)
         }
 
         for r in range(start_r, end_r):
@@ -79,10 +85,10 @@ class GameView:
 
                 color = base_colors.get(tile, (255, 0, 255))
                 pygame.draw.rect(self.screen, color, rect)
-
         center = ((hero_c - start_c) * self.cell_size + self.cell_size // 2,
                   (hero_r - start_r) * self.cell_size + self.cell_size // 2)
         pygame.draw.circle(self.screen, (250, 0, 0), center, self.cell_size // 3)
+
         for monster, (mr, mc) in monsters.items():
             screen_x = (mc - start_c) * self.cell_size
             screen_y = (mr - start_r) * self.cell_size
