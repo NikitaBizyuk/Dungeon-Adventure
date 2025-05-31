@@ -4,7 +4,9 @@ import pygame
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
 from model.room import Room
-
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
+from model.Ogre import Ogre
 
 def main():
     pygame.init()
@@ -59,7 +61,10 @@ def main():
                 hero_last_move_time = current_time
 
         if game.in_room:
-            view.draw_room(game.active_room, WIDTH, HEIGHT)
+            ogre = Ogre
+            skeleton = Skeleton
+            gremlin = Gremlin
+            view.draw_room(game.active_room, WIDTH, HEIGHT,ogre,skeleton,gremlin)
             room = Room
         else:
             view.draw_maze(game.dungeon, game.dungeon.hero_x, game.dungeon.hero_y)

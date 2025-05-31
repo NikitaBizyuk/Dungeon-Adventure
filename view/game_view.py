@@ -1,7 +1,5 @@
 import pygame
-from model.Skeleton import Skeleton
-from model.Gremlin import Gremlin
-from model.Ogre import Ogre
+
 
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
@@ -46,7 +44,7 @@ class GameView:
                 if r == hero_x and c == hero_y:
                     pygame.draw.circle(self.screen, (255, 0, 0), rect.center, self.cell_size // 3)
 
-    def draw_room(self, room, width, height):
+    def draw_room(self, room, width, height,ogre,skeleton,gremlin):
         view_rows = self.view_rows
         view_cols = self.view_cols
 
@@ -92,13 +90,13 @@ class GameView:
         for monster, (mr, mc) in monsters.items():
             screen_x = (mc - start_c) * self.cell_size
             screen_y = (mr - start_r) * self.cell_size
-            if isinstance(monster, Ogre):
+            if isinstance(monster, ogre):
                 pygame.draw.circle(self.screen, (0, 250,0),
                (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, Skeleton):
+            if isinstance(monster, skeleton):
                 pygame.draw.circle(self.screen, (0, 0, 0),
                (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, Gremlin):
+            if isinstance(monster, gremlin):
                 pygame.draw.circle(self.screen, (0,0 , 250),
                (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
 
