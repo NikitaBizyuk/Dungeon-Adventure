@@ -7,7 +7,11 @@ class GameView:
         self.view_rows = view_rows
         self.view_cols = view_cols
 
-    def draw_maze(self, dungeon, hero_x, hero_y):
+    def draw_maze(self, game):
+        dungeon = game.dungeon
+        hero_x = dungeon.hero_x
+        hero_y = dungeon.hero_y
+        aim_dx, aim_dy = game.aim_vector
         view_rows, view_cols = self.view_rows, self.view_cols
 
         start_r = max(0, min(dungeon.rows - view_rows, hero_x - view_rows // 2))
@@ -42,7 +46,16 @@ class GameView:
                 if r == hero_x and c == hero_y:
                     pygame.draw.circle(self.screen, (255, 0, 0), rect.center, self.cell_size // 3)
 
-    def draw_room(self, room, width, height):
+
+                aim_dx, aim_dy = game.aim_vector
+                center_x = (hero_y - start_c) * self.cell_size + self.cell_size // 2
+                center_y = (hero_x - start_r) * self.cell_size + self.cell_size // 2
+                end_x = int(center_x + aim_dx * 40)
+                end_y = int(center_y + aim_dy * 40)
+                pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
+
+    def draw_room(self, game, width, height):
+        room = game.active_room
         view_rows = self.view_rows
         view_cols = self.view_cols
 
@@ -58,23 +71,31 @@ class GameView:
             "door": (0, 128, 255)
         }
 
+        room_tile_width = end_c - start_c
+        room_tile_height = end_r - start_r
+
+        cell_w = width // room_tile_width
+        cell_h = height // room_tile_height
+        cell_size = min(cell_w, cell_h)  # Make tiles square
+
+        # Draw tiles
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 tile = room.get_tile(r, c)
-                room_tile_width = end_c - start_c
-                room_tile_height = end_r - start_r
-
-                cell_w = width // room_tile_width
-                cell_h = height // room_tile_height
-                cell_size = min(cell_w, cell_h)  # Make tiles square
-
                 screen_x = (c - start_c) * cell_size
                 screen_y = (r - start_r) * cell_size
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
-
                 color = base_colors.get(tile, (255, 0, 255))
                 pygame.draw.rect(self.screen, color, rect)
 
-        center = ((hero_c - start_c) * self.cell_size + self.cell_size // 2,
-                  (hero_r - start_r) * self.cell_size + self.cell_size // 2)
-        pygame.draw.circle(self.screen, (255, 0, 0), center, self.cell_size // 3)
+        # Draw hero
+        center_x = (hero_c - start_c) * cell_size + cell_size // 2
+        center_y = (hero_r - start_r) * cell_size + cell_size // 2
+        pygame.draw.circle(self.screen, (255, 0, 0), (center_x, center_y), cell_size // 3)
+
+        # Draw aim direction
+        aim_dx, aim_dy = game.aim_vector
+        end_x = int(center_x + aim_dx * 40)
+        end_y = int(center_y + aim_dy * 40)
+        pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
+

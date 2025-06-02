@@ -7,6 +7,7 @@ class DungeonAdventure:
         self.hero = Warrior("Rudy")
         self.in_room = False
         self.active_room = None
+        self.aim_vector = (1, 0)
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
