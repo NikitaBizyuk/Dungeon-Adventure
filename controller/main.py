@@ -23,13 +23,15 @@ def main():
 
     clock = pygame.time.Clock()
     game = DungeonAdventure()
-    view = GameView(screen, CELL_SIZE, view_rows=FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
+    view = GameView(screen, CELL_SIZE, view_rows = FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
+    font = pygame.font.Font(None, 60)
 
 
     last_move_time = 0
     # If you have a lot of tuning values put them in a config file so you can just change it from there
     hero_last_move_time = 0
     hero_move_delay = 150  # ms
+    in_menu = True
     running = True
 
     while running:
@@ -38,6 +40,16 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif in_menu:
+                for button in view.buttons:
+                    if button.is_clicked(event):
+                        if button.text == "PLAY":
+                            in_menu = False
+                        elif button.text == "LOAD":
+                            print("NOT IMPLEMENTED YET")
+                        elif button.text == ("ABOUT"):
+                            print("Dungeon Adventures VERSION 1.0")
+
             elif event.type == pygame.KEYDOWN and game.in_room:
                 if event.key == pygame.K_q:
                     game.exit_room()
@@ -46,6 +58,9 @@ def main():
                 if event.button == 1:  # Left click
                     game.perform_melee_attack()
                     view.show_melee_attack()
+
+        if in_menu:
+            view.draw_menu()
 
         # --- Movement Input ---
         keys = pygame.key.get_pressed()
@@ -95,13 +110,14 @@ def main():
             game.aim_vector = (aim_dx / length, aim_dy / length)
 
         # --- Draw Maze or Room View ---
-        if game.in_room:
-            ogre = Ogre
-            skeleton = Skeleton
-            gremlin = Gremlin
-            view.draw_room(game, WIDTH, HEIGHT,ogre,skeleton,gremlin)
-        else:
-            view.draw_maze(game)
+        if not in_menu:
+            if game.in_room:
+                ogre = Ogre
+                skeleton = Skeleton
+                gremlin = Gremlin
+                view.draw_room(game, WIDTH, HEIGHT,ogre,skeleton,gremlin)
+            else:
+                view.draw_maze(game)
 
         pygame.display.flip()
         clock.tick(60)

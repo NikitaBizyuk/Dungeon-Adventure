@@ -8,7 +8,24 @@ class GameView:
         self.view_cols = view_cols
         self.last_attack_time = 0
         self.attack_duration = 150
+        self.font = pygame.font.Font(None, 60)
+        self.buttons = []
+        self.create_menu_buttons()
 
+
+    def create_menu_buttons(self):
+        width, height = self.screen.get_size()
+        self.buttons = [
+            Button("PLAY", pygame.Rect(width//2-100, height//2-100, 200, 60), self.font, (200, 200, 200),(255,255,0)),
+            Button("LOAD", pygame.Rect(width // 2 - 100, height // 2 , 200, 60), self.font, (200, 200, 200),
+                   (255, 255, 0)),
+            Button("ABOUT", pygame.Rect(width // 2 - 100, height // 2 + 100, 200, 60), self.font, (200, 200, 200),
+                   (255, 255, 0)),
+        ]
+
+    def draw_menu(self):
+        for button in self.buttons:
+            button.draw(self.screen)
 
     def draw_maze(self, game):
         dungeon = game.dungeon
@@ -165,3 +182,23 @@ class GameView:
 
     def show_melee_attack(self):
         self.last_attack_time = pygame.time.get_ticks()
+
+class Button:
+    def __init__(self, text, rect, font, color, hover_color):
+        self.text = text
+        self.rect = rect
+        self.font = font
+        self.color = color
+        self.hover_color = hover_color
+
+    def draw(self, screen ):
+        mouse_pos = pygame.mouse.get_pos()
+        color = self.hover_color if self.rect.collidepoint(mouse_pos) else self.color
+        pygame.draw.rect(screen, color, self.rect)
+        text_surf = self.font.render(self.text, True, (0,0,0))
+        text_rect = text_surf.get_rect(center=self.rect.center)
+        screen.blit(text_surf, text_rect)
+    def is_clicked(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            return self.rect.collidepoint(event.pos)
+        return False
