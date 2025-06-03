@@ -1,11 +1,14 @@
 import pygame
-
+import math
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
         self.screen = screen
         self.cell_size = cell_size
         self.view_rows = view_rows
         self.view_cols = view_cols
+        self.last_attack_time = 0
+        self.attack_duration = 150
+
 
     def draw_maze(self, game):
         dungeon = game.dungeon
@@ -54,6 +57,22 @@ class GameView:
                 end_y = int(center_y + aim_dy * 40)
                 pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
 
+                current_time = pygame.time.get_ticks()
+                if current_time - self.last_attack_time < self.attack_duration:
+                    style = game.hero.get_melee_style()
+                    attack_angle = math.atan2(aim_dy, aim_dx)
+                    color = style["color"]
+                    arc_width = style["arc_width"]
+                    reach = style["reach"]
+                    swings = style.get("swings", 1)
+
+                    for i in range(swings):
+                        offset = (-1 + 2 * i) * (arc_width / 2) if swings > 1 else 0
+                        angle = attack_angle + offset
+                        ax = int(center_x + reach * math.cos(angle))
+                        ay = int(center_y + reach * math.sin(angle))
+                        pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
+
     def draw_room(self, game, width, height):
         room = game.active_room
         view_rows = self.view_rows
@@ -99,3 +118,21 @@ class GameView:
         end_y = int(center_y + aim_dy * 40)
         pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
 
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_attack_time < self.attack_duration:
+            style = game.hero.get_melee_style()
+            attack_angle = math.atan2(aim_dy, aim_dx)
+            color = style["color"]
+            arc_width = style["arc_width"]
+            reach = style["reach"]
+            swings = style.get("swings", 1)
+
+            for i in range(swings):
+                offset = (-1 + 2 * i) * (arc_width / 2) if swings > 1 else 0
+                angle = attack_angle + offset
+                ax = int(center_x + reach * math.cos(angle))
+                ay = int(center_y + reach * math.sin(angle))
+                pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
+
+    def show_melee_attack(self):
+        self.last_attack_time = pygame.time.get_ticks()

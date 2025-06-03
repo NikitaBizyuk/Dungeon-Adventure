@@ -37,6 +37,11 @@ def main():
                 if event.key == pygame.K_q:
                     game.exit_room()
 
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left click
+                    game.perform_melee_attack()
+                    view.show_melee_attack()
+
         # --- Movement Input ---
         keys = pygame.key.get_pressed()
         dx, dy = 0, 0

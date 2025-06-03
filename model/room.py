@@ -37,6 +37,10 @@ class Room:
 
     def get_dimensions(self):
         return self.height, self.width
+
+    def get_monster_at(self, r, c):
+        # TODO: Replace with actual monster lookup
+        return None
     #
     # def toString(self):
     #     result = ""

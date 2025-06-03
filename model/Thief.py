@@ -1,5 +1,5 @@
 import random
-
+import math
 from model.hero import Hero
 
 
@@ -13,17 +13,26 @@ class Thief(Hero):
         super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
     def attack(self, target):
-        if random.random() < self.chance_to_hit:
-            damage = random.randint(self.damage_min(), self.damage_max())
-            print(f"{self.name()} attacks for {damage} damage.")
-            target.take_damage(damage)
-        else:
-            print(f"{self.name()}'s attack missed!")
+        print(f"{self.name} performs a quick dual stab!")
+        for i in range(2):
+            if random.random() < self.chance_to_hit:
+                damage = random.randint(self.damage_min, self.damage_max)
+                print(f"  Hit {i + 1}: {damage} damage.")
+                target.take_damage(damage)
+            else:
+                print(f"  Hit {i + 1}: missed!")
 
 #Thief special skill goes here
     def special_skill(self, target):
         pass
 
+    def get_melee_style(self):
+        return {
+            "color": (0, 255, 0),  # Green
+            "arc_width": math.pi / 10,
+            "reach": 35,
+            "swings": 2
+        }
 
     def to_String(self) -> str:
         result = ((("Name: " + self._name +
