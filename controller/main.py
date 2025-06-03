@@ -9,12 +9,16 @@ from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 
 def main():
+    a=5
+    print(a.__abs__())
     pygame.init()
 
     # Fullscreen mode
     info = pygame.display.Info()
-    WIDTH, HEIGHT = info.current_w, info.current_h
-    screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+    WIDTH = info.current_w - 70
+    HEIGHT = info.current_h - 100
+
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Dungeon Adventure")
 
     FIXED_VIEW_ROWS = 15
