@@ -47,15 +47,15 @@ class DungeonAdventure:
             hero_r, hero_c = self.active_room.get_hero_position()
             dx, dy = self.aim_vector
 
-            # Target point 1 cell away in aim direction (adjust as needed)
-            target_r = round(hero_r + dx)
-            target_c = round(hero_c + dy)
-
-            # Check for monsters in that tile (you’ll plug this in)
-            monster = self.active_room.get_monster_at(target_r, target_c)
-            if monster:
-                self.hero.attack(monster)
-                monster.flash_hit()  # Optional method to trigger hit effect
+            # # Target point 1 cell away in aim direction (adjust as needed)
+            # target_r = round(hero_r + dx)
+            # target_c = round(hero_c + dy)
+            #
+            # # Check for monsters in that tile (you’ll plug this in)
+            # monster = self.active_room.get_monster_at(target_r, target_c)
+            # if monster:
+            #     self.hero.attack(monster)
+            #     monster.flash_hit()  # Optional method to trigger hit effect
 
 
     def exit_room(self):

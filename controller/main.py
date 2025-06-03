@@ -59,7 +59,7 @@ def main():
             current_time = pygame.time.get_ticks()
             if current_time - hero_last_move_time >= hero_move_delay:
                 game.move_hero(dx, dy)
-               # game.move_monsters()
+                game.move_monsters()
                 hero_last_move_time = current_time
 
         # --- 📍 Mouse-Aim Vector Update (INSERTED HERE) ---
