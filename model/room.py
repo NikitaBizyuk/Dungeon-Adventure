@@ -44,42 +44,53 @@ class Room:
         self.grid[self.hero_r][self.hero_c] = "floor"
 
     def move_monsters(self):
-        cntr = 0
-        for monster in self.monsters:
+        new_positions = {}
+        occupied = set(self.monsters.values())  # current monster positions
+        occupied.add((self.hero_r, self.hero_c))  # also block hero's tile
+
+        for monster in list(self.monsters.keys()):
             r, c = self.monsters[monster]
             dr = 1 if r < self.hero_r else -1 if r > self.hero_r else 0
             dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
             new_r = r + dr
             new_c = c + dc
-            if (new_r, new_c) == (self.hero_r,self.hero_c):
-                continue
-            if (new_r, new_c) in self.monsters.values():
-                continue
-            if random.randint(1,100) % 7 == 0:
-                new_r += 1
-            if random.randint(1,100) % 9 == 0:
-                new_r += 1
-            if random.randint(1,100) % 4 == 0:
-                new_c += 1
-            if random.randint(1,100) % 9 == 0:
-                new_c += 1
-            cntr += 1
-            # Check if within bounds and walkable
-            if 0 <= new_r < self.height and 0 <= new_c < self.width:
-                if self.grid[new_r][new_c] in ["floor", "door"]:
-                    self.monsters[monster] = (new_r, new_c)
-        return None
+
+            # Random movement tweaks
+            if random.randint(1, 100) % 7 == 0: new_r += 1
+            if random.randint(1, 100) % 9 == 0: new_r += 1
+            if random.randint(1, 100) % 4 == 0: new_c += 1
+            if random.randint(1, 100) % 9 == 0: new_c += 1
+
+            # Check bounds and tile
+            if (0 <= new_r < self.height and 0 <= new_c < self.width and
+                    self.grid[new_r][new_c] in ["floor", "door"] and
+                    (new_r, new_c) not in occupied):
+                new_positions[monster] = (new_r, new_c)
+                occupied.add((new_r, new_c))
+            else:
+                new_positions[monster] = (r, c)
+                occupied.add((r, c))  # ensure current pos stays blocked
+
+        self.monsters = new_positions
 
     def move_hero_in_room(self, dx, dy):
         nr = self.hero_r + dx
         nc = self.hero_c + dy
+
         if 0 <= nr < self.height and 0 <= nc < self.width:
             target = self.grid[nr][nc]
+
+            # Block if trying to move into a monster
+            for _, (mr, mc) in self.monsters.items():
+                if (nr, nc) == (mr, mc):
+                    return None
+
             if target in ["floor", "door"]:
                 self.hero_r = nr
                 self.hero_c = nc
                 if target == "door":
                     return "exit"
+
         return None
 
     def get_tile(self, r, c):
@@ -90,8 +101,16 @@ class Room:
 
     def get_dimensions(self):
         return self.height, self.width
+
     def get_monsters(self):
         return self.monsters
+
+    def get_monster_at(self, r, c):
+        for monster, (mr, mc) in self.monsters.items():
+            if (mr, mc) == (r, c):
+                return monster
+        return None
+
     #
     # def toString(self):
     #     result = ""

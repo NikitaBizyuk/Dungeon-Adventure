@@ -55,11 +55,11 @@ def main():
         if keys[pygame.K_a]: dy -= 1
         if keys[pygame.K_d]: dy += 1
 
+        game.move_monsters()
         if dx != 0 or dy != 0:
             current_time = pygame.time.get_ticks()
             if current_time - hero_last_move_time >= hero_move_delay:
                 game.move_hero(dx, dy)
-                game.move_monsters()
                 hero_last_move_time = current_time
 
         # --- 📍 Mouse-Aim Vector Update (INSERTED HERE) ---
@@ -100,7 +100,6 @@ def main():
             skeleton = Skeleton
             gremlin = Gremlin
             view.draw_room(game, WIDTH, HEIGHT,ogre,skeleton,gremlin)
-            room = Room
         else:
             view.draw_maze(game)
 

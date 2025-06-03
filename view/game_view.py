@@ -128,17 +128,24 @@ class GameView:
         for monster, (mr, mc) in monsters.items():
             screen_x = (mc - start_c) * self.cell_size
             screen_y = (mr - start_r) * self.cell_size
+
+            # Determine monster base color
             if isinstance(monster, ogre):
-                pygame.draw.circle(self.screen, (0, 250,0),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, skeleton):
-                pygame.draw.circle(self.screen, (0, 0, 0),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, gremlin):
-                pygame.draw.circle(self.screen, (0,0 , 250),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+                base_color = (0, 250, 0)
+            elif isinstance(monster, skeleton):
+                base_color = (0, 0, 0)
+            elif isinstance(monster, gremlin):
+                base_color = (0, 0, 250)
+            else:
+                base_color = (255, 0, 255)  # fallback
 
+            pos = (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2)
 
+            # Flashing outline if recently hit
+            if hasattr(monster, "is_flashing") and monster.is_flashing():
+                pygame.draw.circle(self.screen, (255, 0, 0), pos, self.cell_size // 2)  # red outer outline
+
+            pygame.draw.circle(self.screen, base_color, pos, self.cell_size // 3)  # inner color
 
         current_time = pygame.time.get_ticks()
         if current_time - self.last_attack_time < self.attack_duration:

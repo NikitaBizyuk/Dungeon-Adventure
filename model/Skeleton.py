@@ -4,13 +4,22 @@ from model.monster import Monster
 
 
 class Skeleton(Monster):
-    def __init__(self,name = "DEADLYTON"):
-        damage_min = 30
-        damage_max = 60
+    def __init__(self, name="DEADLYTON"):
+        damage_min = 25
+        damage_max = 50
         attack_speed = 3
-        hit_chance = 50
-        heal_points = 40
-        super().__init__(name, damage_min, damage_max, attack_speed,hit_chance,heal_points)
+        health_points = 160
+        chance_to_hit = 0.5
+        chance_to_heal = 0.15
+        super().__init__(name, damage_min, damage_max, attack_speed, health_points, chance_to_hit, chance_to_heal)
+
+    def attack(self, target):
+        if random.random() < self.chance_to_hit:
+            damage = random.randint(self.damage_min, self.damage_max)
+            print(f"{self.name} slashes for {damage} damage.")
+            target.take_damage(damage)
+        else:
+            print(f"{self.name}'s slash missed!")
 
     @property
     def name(self):
@@ -25,13 +34,6 @@ class Skeleton(Monster):
     def damage_max(self):
         return self._damage_max
 
-    def attack(self, target):
-        if random.random() < self.chance_to_hit():
-            damage = random.randint(self.damage_min(), self.damage_max())
-            print(" slashes for" + str(damage) + "damage.")
-            target.take_damage(damage)
-        else:
-            print(f"{self.name()}'s slash missed!")
 
     def to_String(self) -> str:
         result = ((("Name: " + self._name +

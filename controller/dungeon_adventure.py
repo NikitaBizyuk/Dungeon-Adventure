@@ -21,7 +21,6 @@ class DungeonAdventure:
         self.monster_last_move_time = 0
 
     def move_hero(self, dx, dy):
-        current_time = pygame.time.get_ticks()
         if self.dungeon.in_room:
             status = self.dungeon.active_room.move_hero_in_room(dx, dy)
             if status == "exit":
@@ -47,16 +46,22 @@ class DungeonAdventure:
             hero_r, hero_c = self.active_room.get_hero_position()
             dx, dy = self.aim_vector
 
-            # # Target point 1 cell away in aim direction (adjust as needed)
-            # target_r = round(hero_r + dx)
-            # target_c = round(hero_c + dy)
-            #
-            # # Check for monsters in that tile (you’ll plug this in)
-            # monster = self.active_room.get_monster_at(target_r, target_c)
-            # if monster:
-            #     self.hero.attack(monster)
-            #     monster.flash_hit()  # Optional method to trigger hit effect
+            if abs(dx) > abs(dy):
+                target_r = hero_r
+                target_c = hero_c + (1 if dx > 0 else -1)
+            else:
+                target_r = hero_r + (1 if dy > 0 else -1)
+                target_c = hero_c
 
+            monster = self.active_room.get_monster_at(target_r, target_c)
+            if monster:
+                print(f"🗡️ Rudy attacks {monster.name} at ({target_r}, {target_c})")
+                self.hero.attack(monster)
+                monster.flash_hit()
+                print(f"🧟 {monster.name} HP after attack: {monster.health_points}")
+                if not monster.is_alive():
+                    print(f"💀 {monster.name} has died and is removed from the room.")
+                    del self.active_room.monsters[monster]
 
     def exit_room(self):
         self.in_room = False
