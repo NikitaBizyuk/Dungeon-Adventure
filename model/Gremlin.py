@@ -10,6 +10,7 @@ class Gremlin(Monster):
         attack_speed = 5
         chance_to_hit = .4
         heal_points = 40
+
         super().__init__(name, damage_min, damage_max, attack_speed,chance_to_hit,heal_points)
     @property
     def name(self):

@@ -73,12 +73,13 @@ class GameView:
                         ay = int(center_y + reach * math.sin(angle))
                         pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
 
-    def draw_room(self, game, width, height):
+    def draw_room(self, game, width, height,ogre,skeleton,gremlin):
         room = game.active_room
         view_rows = self.view_rows
         view_cols = self.view_cols
 
         hero_r, hero_c = room.get_hero_position()
+        monsters = room.get_monsters()
         start_r = max(0, min(max(0, room.height - view_rows), hero_r - view_rows // 2))
         start_c = max(0, min(max(0, room.width - view_cols), hero_c - view_cols // 2))
         end_r = min(start_r + view_rows, room.height)
@@ -87,7 +88,13 @@ class GameView:
         base_colors = {
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
-            "door": (0, 128, 255)
+            "door": (0, 128, 255),
+            "Encapsulation": (255, 215, 0),
+            "Polymorphism": (255, 215, 0),
+            "Abstraction": (255, 215, 0),
+            "Inheritance": (255, 215, 0),
+            "Health Potion": (255, 192, 203),
+            "Vision Potion": (255, 192, 203)
         }
 
         room_tile_width = end_c - start_c
@@ -117,6 +124,21 @@ class GameView:
         end_x = int(center_x + aim_dx * 40)
         end_y = int(center_y + aim_dy * 40)
         pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
+
+        for monster, (mr, mc) in monsters.items():
+            screen_x = (mc - start_c) * self.cell_size
+            screen_y = (mr - start_r) * self.cell_size
+            if isinstance(monster, ogre):
+                pygame.draw.circle(self.screen, (0, 250,0),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+            if isinstance(monster, skeleton):
+                pygame.draw.circle(self.screen, (0, 0, 0),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+            if isinstance(monster, gremlin):
+                pygame.draw.circle(self.screen, (0,0 , 250),
+               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
+
+
 
         current_time = pygame.time.get_ticks()
         if current_time - self.last_attack_time < self.attack_duration:

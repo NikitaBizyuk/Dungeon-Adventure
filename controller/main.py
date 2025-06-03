@@ -1,8 +1,12 @@
+from xml.dom.minidom import ReadOnlySequentialNamedNodeMap
 
 import pygame
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
-
+from model.room import Room
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
+from model.Ogre import Ogre
 
 def main():
     pygame.init()
@@ -24,7 +28,8 @@ def main():
 
     last_move_time = 0
     # If you have a lot of tuning values put them in a config file so you can just change it from there
-    move_delay = 150  # ms
+    hero_last_move_time = 0
+    hero_move_delay = 150  # ms
     running = True
 
     while running:
@@ -52,9 +57,10 @@ def main():
 
         if dx != 0 or dy != 0:
             current_time = pygame.time.get_ticks()
-            if current_time - last_move_time >= move_delay:
+            if current_time - hero_last_move_time >= hero_move_delay:
                 game.move_hero(dx, dy)
-                last_move_time = current_time
+               # game.move_monsters()
+                hero_last_move_time = current_time
 
         # --- 📍 Mouse-Aim Vector Update (INSERTED HERE) ---
         if game.in_room:
@@ -90,13 +96,16 @@ def main():
 
         # --- Draw Maze or Room View ---
         if game.in_room:
-            view.draw_room(game, WIDTH, HEIGHT)
+            ogre = Ogre
+            skeleton = Skeleton
+            gremlin = Gremlin
+            view.draw_room(game, WIDTH, HEIGHT,ogre,skeleton,gremlin)
+            room = Room
         else:
             view.draw_maze(game)
 
         pygame.display.flip()
         clock.tick(60)
-
 
     pygame.quit()
 
