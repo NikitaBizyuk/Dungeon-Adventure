@@ -1,5 +1,3 @@
-from xml.dom.minidom import ReadOnlySequentialNamedNodeMap
-
 import pygame
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
@@ -8,89 +6,104 @@ from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 
-def main():
+
+def main() -> None:
+    # ────────────── init Pygame / window ──────────────
     pygame.init()
 
-    # Fullscreen mode
-    info = pygame.display.Info()
-    WIDTH, HEIGHT =  800,600       #info.current_w, info.current_h
-    screen = pygame.display.set_mode((WIDTH, HEIGHT)) #pygame.FULLSCREEN)
+    info   = pygame.display.Info()
+    WIDTH  = info.current_w - 70        # teammate’s margins
+    HEIGHT = info.current_h - 100
+
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Dungeon Adventure")
 
+    # ────────────── view / scaling constants ──────────
     FIXED_VIEW_ROWS = 15
-    CELL_SIZE = HEIGHT // FIXED_VIEW_ROWS
-    FIXED_VIEW_COLS = WIDTH // CELL_SIZE
+    CELL_SIZE       = HEIGHT // FIXED_VIEW_ROWS
+    FIXED_VIEW_COLS = WIDTH  // CELL_SIZE
 
     clock = pygame.time.Clock()
-    game = DungeonAdventure()
-    view = GameView(screen, CELL_SIZE, view_rows = FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
-    font = pygame.font.Font(None, 60)
+    view  = GameView(screen, CELL_SIZE, FIXED_VIEW_ROWS, FIXED_VIEW_COLS)
 
+    # ────────────── game state variables ──────────────
+    state              = "main_menu"   # → "difficulty_menu" → "playing"
+    difficulty         = None
+    game               = None          # <── create after difficulty chosen
+    hero_last_move_ms  = 0
+    HERO_MOVE_DELAY_MS = 150
 
-
-    # If you have a lot of tuning values put them in a config file so you can just change it from there
-    hero_last_move_time = 0
-    hero_move_delay = 150  # ms
-    in_menu = True
+    # ────────────── main loop ─────────────────────────
     running = True
-
     while running:
         screen.fill((0, 0, 0))
 
+        # ---------- handle events ----------
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif in_menu:
-                for button in view.buttons:
-                    if button.is_clicked(event):
-                        if button.text == "PLAY":
-                            in_menu = False
-                        elif button.text == "LOAD":
-                            print("NOT IMPLEMENTED YET")
-                        elif button.text == ("ABOUT") :
-                            print("Dungeon Adventures VERSION 1.0")
-            else:
-                if event.type == pygame.KEYDOWN and game.in_room:
-                    if event.key == pygame.K_q:
-                        game.exit_room()
 
-        if in_menu:
-            view.draw_menu()
+            # ===== MAIN MENU =====
+            if state == "main_menu":
+                for btn in view.menu_buttons:
+                    if btn.is_clicked(event) and btn.text == "PLAY":
+                        state = "difficulty_menu"
 
-        else:
-            #Add variables to the values so they are not magic values
+            # ===== DIFFICULTY MENU =====
+            elif state == "difficulty_menu":
+                for btn in view.difficulty_buttons:
+                    if btn.is_clicked(event):
+                        difficulty = btn.text.lower()          # easy | medium | hard
+                        Room.set_difficulty(difficulty)        # update monster ranges
+
+                        game = DungeonAdventure()              # build dungeon *after* setting difficulty
+                        if hasattr(game, "set_difficulty"):
+                            game.set_difficulty(difficulty)
+
+                        print(f"Started game on {difficulty.upper()}")
+                        state = "playing"
+
+            # ===== GAME HOTKEYS =====
+            elif state == "playing":
+                if (
+                    event.type == pygame.KEYDOWN
+                    and game.in_room
+                    and event.key == pygame.K_q
+                ):
+                    game.exit_room()
+
+        # ---------- per‑frame input ----------
+        if state == "playing":
             keys = pygame.key.get_pressed()
-            dx, dy = 0, 0
-            if keys[pygame.K_w]:
-                dx -= 1
-            if keys[pygame.K_s]:
-                dx += 1
-            if keys[pygame.K_a]:
-                dy -= 1
-            if keys[pygame.K_d]:
-                dy += 1
-            game.move_monsters()
-            if dx != 0 or dy != 0:
-                current_time = pygame.time.get_ticks()
-                if current_time - hero_last_move_time >= hero_move_delay:
-                    game.move_hero(dx, dy)
-                   # game.move_monsters()
-                    hero_last_move_time = current_time
+            dx = -1 if keys[pygame.K_w] else 1 if keys[pygame.K_s] else 0
+            dy = -1 if keys[pygame.K_a] else 1 if keys[pygame.K_d] else 0
 
+            # move hero on a timer
+            if dx or dy:
+                now = pygame.time.get_ticks()
+                if now - hero_last_move_ms >= HERO_MOVE_DELAY_MS:
+                    game.move_hero(dx, dy)
+                    hero_last_move_ms = now
+
+            game.move_monsters()
+
+        # ---------- draw ----------
+        if state == "main_menu":
+            view.draw_buttons(view.menu_buttons)
+
+        elif state == "difficulty_menu":
+            view.draw_buttons(view.difficulty_buttons)
+
+        elif state == "playing":
             if game.in_room:
-                ogre = Ogre
-                skeleton = Skeleton
-                gremlin = Gremlin
-                view.draw_room(game.active_room, WIDTH, HEIGHT,ogre,skeleton,gremlin)
-                room = Room
+                view.draw_room(
+                    game.active_room, WIDTH, HEIGHT, Ogre, Skeleton, Gremlin
+                )
             else:
                 view.draw_maze(game.dungeon, game.dungeon.hero_x, game.dungeon.hero_y)
 
-
         pygame.display.flip()
         clock.tick(60)
-
-
 
     pygame.quit()
 
