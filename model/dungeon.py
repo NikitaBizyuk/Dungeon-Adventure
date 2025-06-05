@@ -3,20 +3,27 @@ from model.room import Room
 from model.maze_cell import MazeCell
 
 class Dungeon:
-    def __init__(self, rows=61, cols=61, view_rows=15, view_cols=15, difficulty="large"):
-        self.rows = rows
-        self.cols = cols
-        self.maze = [[MazeCell(r, c) for c in range(cols)] for r in range(rows)]
+    def __init__(self, difficulty="medium"):
+        if difficulty == "easy":
+            self.rows, self.cols = 41, 41
+            self.room_count = 8
+        elif difficulty == "hard":
+            self.rows, self.cols = 81, 81
+            self.room_count = 25
+        else:  # "medium" or default
+            self.rows, self.cols = 61, 61
+            self.room_count = 15
+
+        self.view_rows = 15
+        self.view_cols = 15
+        self.difficulty = difficulty
+        self.maze = [[MazeCell(r, c) for c in range(self.cols)] for r in range(self.rows)]
         self.rooms = {}
         self.hero_x = 0
         self.hero_y = 0
         self.in_room = False
         self.active_room = None
-        self.view_rows = view_rows
-        self.view_cols = view_cols
         self.room_exit_point = None
-
-        self.room_count = 8 if difficulty == "small" else 20
         self.room_templates = self._define_room_templates()
         self.room_centers = []
 

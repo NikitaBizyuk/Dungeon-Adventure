@@ -36,36 +36,55 @@ def main():
     hero_move_delay = 150
     in_menu = True
     running = True
+    state = "main_menu"  # other options: "difficulty_menu", "playing"
+    difficulty = None
+    game = None
 
     while running:
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif in_menu:
-                for button in buttons:
+
+            elif state == "main_menu":
+                for button in view.menu_buttons:
                     if button.is_clicked(event):
                         if button.text == "PLAY":
-                            in_menu = False
+                            state = "difficulty_menu"
                         elif button.text == "LOAD":
                             print("NOT IMPLEMENTED YET")
                         elif button.text == "ABOUT":
                             print("Dungeon Adventures VERSION 1.0")
                         elif button.text == "QUIT":
                             running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    in_menu = not in_menu  # Toggle menu on/off
-                elif not in_menu and game.in_room and event.key == pygame.K_q:
-                    game.exit_room()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+
+            elif state == "difficulty_menu":
+                for button in view.difficulty_buttons:
+                    if button.is_clicked(event):
+                        difficulty = button.text.lower()
+                        from model.room import Room
+                        Room.set_difficulty(difficulty)
+                        game = DungeonAdventure()
+                        if hasattr(game, "set_difficulty"):
+                            game.set_difficulty(difficulty)
+                        print(f"Started game on {difficulty.upper()}")
+                        state = "playing"
+
+            elif state == "playing":
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        state = "main_menu"
+                    elif game.in_room and event.key == pygame.K_q:
+                        game.exit_room()
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     game.perform_melee_attack()
                     view.show_melee_attack()
 
-        if in_menu:
-            view.draw_menu(buttons)
-        else:
+        if state == "main_menu":
+            view.draw_buttons(view.menu_buttons)
+        elif state == "difficulty_menu":
+            view.draw_buttons(view.difficulty_buttons)
+        elif state == "playing":
             keys = pygame.key.get_pressed()
             dx, dy = 0, 0
             if keys[pygame.K_w]: dx -= 1

@@ -13,7 +13,7 @@ import random
 
 class DungeonAdventure:
     def __init__(self):
-        self.dungeon = Dungeon(rows=61, cols=61, difficulty="large")
+        self.dungeon = Dungeon(difficulty=Room._current_difficulty)
         self.hero = Priestess("Rudy")
         self.in_room = False
         self.active_room = None

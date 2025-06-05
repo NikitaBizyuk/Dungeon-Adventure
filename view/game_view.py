@@ -1,5 +1,6 @@
 import pygame
 import math
+from view.menu_button import Button
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
         self.screen = screen
@@ -10,8 +11,27 @@ class GameView:
         self.attack_duration = 150
         self.font = pygame.font.Font(None, 60)
 
+        self.menu_buttons = self.create_menu_buttons()
+        self.difficulty_buttons = self.create_difficulty_buttons()
 
-    def draw_menu(self, buttons):
+    def create_menu_buttons(self):
+        w, h = self.screen.get_size()
+        return [
+            Button("PLAY", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("LOAD", pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("ABOUT", pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("QUIT", pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+        ]
+
+    def create_difficulty_buttons(self):
+        w, h = self.screen.get_size()
+        return [
+            Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
+            Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2, 200, 60), self.font, (200, 200, 200), (255, 165, 0)),
+            Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
+        ]
+
+    def draw_buttons(self, buttons):
         for button in buttons:
             button.draw(self.screen)
 
