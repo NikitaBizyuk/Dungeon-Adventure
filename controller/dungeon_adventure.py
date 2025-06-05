@@ -1,50 +1,69 @@
+import pygame
+
 from model.dungeon import Dungeon
+from model.Priestess import Priestess
 from model.warrior import Warrior
+from model.Thief import Thief
+from model.MonsterFactory import MonsterFactory
+from model.Skeleton import Skeleton
+from model.Gremlin import Gremlin
+from model.Ogre import Ogre
+from model.room import Room
+import random
 
 class DungeonAdventure:
     def __init__(self):
-        self.dungeon = Dungeon(rows = 5, cols = 5)
-        self.hero = Warrior("Rudy")
-        self.hero_x = 0
-        self.hero_y = 0
-        self.dungeon.place_hero(self.hero, self.hero_x, self.hero_y)
+        self.dungeon = Dungeon(difficulty=Room._current_difficulty)
+        self.hero = Priestess("Rudy")
+        self.in_room = False
+        self.active_room = None
+        self.aim_vector = (1, 0)
+        self.monster_last_move_time = 0
 
-    def move_hero(self, direction):
-        dx, dy = 0, 0
-        if direction == "up":
-            dx = -1
-        elif direction == "down":
-            dx = 1
-        elif direction == "left":
-            dy = -1
-        elif direction == "right":
-            dy = 1
+    def move_hero(self, dx, dy):
+        if self.dungeon.in_room:
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy)
+            if status == "exit":
+                self.dungeon.in_room = False
+                self.dungeon.active_room = None
+                self.in_room = False
+                self.active_room = None
+        else:
+            self.dungeon.move_hero(dx, dy)
+            if self.dungeon.in_room:
+                self.in_room = True
+                self.active_room = self.dungeon.active_room
 
-        new_x = max(0, min(self.hero_x + dx, self.dungeon.rows - 1))
-        new_y = max(0, min(self.hero_y + dy, self.dungeon.cols - 1))
+    def move_monsters(self):
+        if self.in_room:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.monster_last_move_time > 400:
+                self.dungeon.active_room.move_monsters()
+                self.monster_last_move_time = current_time
 
-        self.hero_x, self.hero_y = new_x, new_y
-        room = self.dungeon.get_room(self.hero_x, self.hero_y)
-        room.enter(self.hero)
+    def perform_melee_attack(self):
+        if self.in_room and self.active_room:
+            hero_r, hero_c = self.active_room.get_hero_position()
+            dx, dy = self.aim_vector
 
-        self.print_hero_info()
-        self.dungeon.print_dungeon()
-
-
-    def print_hero_info(self):
-        print(f"\n--- Hero Stats ---")
-        print(f"Name: {self.hero.name}")
-        print(f"HP: {self.hero.health_points}")
-        print(f"Pillars Found: {self.hero.pillars_found}\n")
-
-    def start_game(self):
-        print("Game started! Use 'up', 'down', 'left', 'right' to move. Type 'quit' to exit.\n")
-        while self.hero.health_points > 0:
-            command = input("Move: ").strip().lower()
-            if command == "quit":
-                print("Thanks for playing!")
-                break
-            elif command in {"up", "down", "left", "right"}:
-                self.move_hero(command)
+            if abs(dx) > abs(dy):
+                target_r = hero_r
+                target_c = hero_c + (1 if dx > 0 else -1)
             else:
-                print("Invalid input. Try 'up', 'down', 'left', or 'right'.")
+                target_r = hero_r + (1 if dy > 0 else -1)
+                target_c = hero_c
+
+            monster = self.active_room.get_monster_at(target_r, target_c)
+            if monster:
+                print(f"🗡️ Rudy attacks {monster.name} at ({target_r}, {target_c})")
+                self.hero.attack(monster)
+                monster.flash_hit()
+                print(f"🧟 {monster.name} HP after attack: {monster.health_points}")
+                if not monster.is_alive():
+                    print(f"💀 {monster.name} has died and is removed from the room.")
+                    del self.active_room.monsters[monster]
+
+    def exit_room(self):
+        self.in_room = False
+        self.dungeon.in_room = False
+        self.active_room = None

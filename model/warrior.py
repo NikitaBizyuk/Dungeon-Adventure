@@ -1,7 +1,7 @@
 import random
 
 from model.hero import Hero
-
+import math
 
 class Warrior(Hero):
     def __init__(self, name):
@@ -12,14 +12,13 @@ class Warrior(Hero):
         chance_to_hit = 0.8
         super().__init__(name, health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
-
     def attack(self, target):
-        if random.random() < self.chance_to_hit():
-            damage = random.randint(self.damage_min(), self.damage_max())
-            print(f"{self.name()} attacks for {damage} damage.")
+        if random.random() < self.chance_to_hit:
+            damage = random.randint(self.damage_min, self.damage_max)
+            print(f"{self.name} slashes for {damage} damage.")
             target.take_damage(damage)
         else:
-            print(f"{self.name()}'s attack missed!")
+            print(f"{self.name}'s sword attack missed!")
 
     def special_skill(self, target):
         if random.random() < 0.4:
@@ -28,6 +27,14 @@ class Warrior(Hero):
             target.take_damage(damage)
         else:
             print(f"{self.name()}'s Crushing Blow missed!")
+
+    def get_melee_style(self):
+        return {
+            "color": (255, 0, 0),  # Red
+            "arc_width": math.pi / 4,
+            "reach": 50,
+            "swings": 1
+        }
 
     def to_string(self) -> str:
         return (
