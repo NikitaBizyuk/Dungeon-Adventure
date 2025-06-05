@@ -22,22 +22,11 @@ def main():
     clock = pygame.time.Clock()
     game = DungeonAdventure()
     view = GameView(screen, CELL_SIZE, view_rows=FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
-    font = pygame.font.Font(None, 60)
-
-    # 🎯 Create Menu Buttons (controller owns this)
-    buttons = [
-        Button("PLAY", pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 150, 200, 60), font, (200, 200, 200), (255, 255, 0)),
-        Button("LOAD", pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 50, 200, 60), font, (200, 200, 200), (255, 255, 0)),
-        Button("ABOUT", pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 50, 200, 60), font, (200, 200, 200), (255, 255, 0)),
-        Button("QUIT", pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 150, 200, 60), font, (200, 200, 200), (255, 255, 0))
-    ]
 
     hero_last_move_time = 0
     hero_move_delay = 150
-    in_menu = True
     running = True
-    state = "main_menu"  # other options: "difficulty_menu", "playing"
-    difficulty = None
+    state = "main_menu" 
     game = None
 
     while running:
