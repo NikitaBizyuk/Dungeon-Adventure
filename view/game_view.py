@@ -1,15 +1,45 @@
 import pygame
-
-
+import math
+from view.menu_button import Button
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
         self.screen = screen
         self.cell_size = cell_size
         self.view_rows = view_rows
         self.view_cols = view_cols
-       # self.font = pygame.font.SysFont(None, 24)
+        self.last_attack_time = 0
+        self.attack_duration = 150
+        self.font = pygame.font.Font(None, 60)
 
-    def draw_maze(self, dungeon, hero_x, hero_y):
+        self.menu_buttons = self.create_menu_buttons()
+        self.difficulty_buttons = self.create_difficulty_buttons()
+
+    def create_menu_buttons(self):
+        w, h = self.screen.get_size()
+        return [
+            Button("PLAY", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("LOAD", pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("ABOUT", pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("QUIT", pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+        ]
+
+    def create_difficulty_buttons(self):
+        w, h = self.screen.get_size()
+        return [
+            Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
+            Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2, 200, 60), self.font, (200, 200, 200), (255, 165, 0)),
+            Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
+        ]
+
+    def draw_buttons(self, buttons):
+        for button in buttons:
+            button.draw(self.screen)
+
+    def draw_maze(self, game):
+        dungeon = game.dungeon
+        hero_x = dungeon.hero_x
+        hero_y = dungeon.hero_y
+        aim_dx, aim_dy = game.aim_vector
         view_rows, view_cols = self.view_rows, self.view_cols
 
         start_r = max(0, min(dungeon.rows - view_rows, hero_x - view_rows // 2))
@@ -44,7 +74,32 @@ class GameView:
                 if r == hero_x and c == hero_y:
                     pygame.draw.circle(self.screen, (255, 0, 0), rect.center, self.cell_size // 3)
 
-    def draw_room(self, room, width, height,ogre,skeleton,gremlin):
+
+                aim_dx, aim_dy = game.aim_vector
+                center_x = (hero_y - start_c) * self.cell_size + self.cell_size // 2
+                center_y = (hero_x - start_r) * self.cell_size + self.cell_size // 2
+                end_x = int(center_x + aim_dx * 40)
+                end_y = int(center_y + aim_dy * 40)
+                pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
+
+                current_time = pygame.time.get_ticks()
+                if current_time - self.last_attack_time < self.attack_duration:
+                    style = game.hero.get_melee_style()
+                    attack_angle = math.atan2(aim_dy, aim_dx)
+                    color = style["color"]
+                    arc_width = style["arc_width"]
+                    reach = style["reach"]
+                    swings = style.get("swings", 1)
+
+                    for i in range(swings):
+                        offset = (-1 + 2 * i) * (arc_width / 2) if swings > 1 else 0
+                        angle = attack_angle + offset
+                        ax = int(center_x + reach * math.cos(angle))
+                        ay = int(center_y + reach * math.sin(angle))
+                        pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
+
+    def draw_room(self, game, width, height,ogre,skeleton,gremlin):
+        room = game.active_room
         view_rows = self.view_rows
         view_cols = self.view_cols
 
@@ -67,37 +122,72 @@ class GameView:
             "Vision Potion": (255, 192, 203)
         }
 
+        room_tile_width = end_c - start_c
+        room_tile_height = end_r - start_r
+
+        cell_w = width // room_tile_width
+        cell_h = height // room_tile_height
+        cell_size = min(cell_w, cell_h)  # Make tiles square
+
+        # Draw tiles
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 tile = room.get_tile(r, c)
-                room_tile_width = end_c - start_c
-                room_tile_height = end_r - start_r
-
-                cell_w = width // room_tile_width
-                cell_h = height // room_tile_height
-                cell_size = min(cell_w, cell_h)  # Make tiles square
-
                 screen_x = (c - start_c) * cell_size
                 screen_y = (r - start_r) * cell_size
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
-
                 color = base_colors.get(tile, (255, 0, 255))
                 pygame.draw.rect(self.screen, color, rect)
-        center = ((hero_c - start_c) * self.cell_size + self.cell_size // 2,
-                  (hero_r - start_r) * self.cell_size + self.cell_size // 2)
-        pygame.draw.circle(self.screen, (250, 0, 0), center, self.cell_size // 3)
+
+        # Draw hero
+        center_x = (hero_c - start_c) * cell_size + cell_size // 2
+        center_y = (hero_r - start_r) * cell_size + cell_size // 2
+        pygame.draw.circle(self.screen, (255, 0, 0), (center_x, center_y), cell_size // 3)
+
+        # Draw aim direction
+        aim_dx, aim_dy = game.aim_vector
+        end_x = int(center_x + aim_dx * 40)
+        end_y = int(center_y + aim_dy * 40)
+        pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
 
         for monster, (mr, mc) in monsters.items():
             screen_x = (mc - start_c) * self.cell_size
             screen_y = (mr - start_r) * self.cell_size
-            if isinstance(monster, ogre):
-                pygame.draw.circle(self.screen, (0, 250,0),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, skeleton):
-                pygame.draw.circle(self.screen, (0, 0, 0),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
-            if isinstance(monster, gremlin):
-                pygame.draw.circle(self.screen, (0,0 , 250),
-               (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2), self.cell_size // 3)
 
+            # Determine monster base color
+            if isinstance(monster, ogre):
+                base_color = (0, 250, 0)
+            elif isinstance(monster, skeleton):
+                base_color = (0, 0, 0)
+            elif isinstance(monster, gremlin):
+                base_color = (0, 0, 250)
+            else:
+                base_color = (255, 0, 255)  # fallback
+
+            pos = (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2)
+
+            # Flashing outline if recently hit
+            if hasattr(monster, "is_flashing") and monster.is_flashing():
+                pygame.draw.circle(self.screen, (255, 0, 0), pos, self.cell_size // 2)  # red outer outline
+
+            pygame.draw.circle(self.screen, base_color, pos, self.cell_size // 3)  # inner color
+
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_attack_time < self.attack_duration:
+            style = game.hero.get_melee_style()
+            attack_angle = math.atan2(aim_dy, aim_dx)
+            color = style["color"]
+            arc_width = style["arc_width"]
+            reach = style["reach"]
+            swings = style.get("swings", 1)
+
+            for i in range(swings):
+                offset = (-1 + 2 * i) * (arc_width / 2) if swings > 1 else 0
+                angle = attack_angle + offset
+                ax = int(center_x + reach * math.cos(angle))
+                ay = int(center_y + reach * math.sin(angle))
+                pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
+
+    def show_melee_attack(self):
+        self.last_attack_time = pygame.time.get_ticks()
 
