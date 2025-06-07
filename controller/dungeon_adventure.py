@@ -10,6 +10,9 @@ from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.room import Room
 import random
+from model.projectile import Projectile
+import math
+
 
 class DungeonAdventure:
     def __init__(self):
@@ -19,6 +22,7 @@ class DungeonAdventure:
         self.active_room = None
         self.aim_vector = (1, 0)
         self.monster_last_move_time = 0
+        self._projectiles = []
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
@@ -62,6 +66,49 @@ class DungeonAdventure:
                 if not monster.is_alive():
                     print(f"💀 {monster.name} has died and is removed from the room.")
                     del self.active_room.monsters[monster]
+
+    def perform_ranged_attack(self, cell_size):
+        dx, dy = self.aim_vector
+
+        if self.in_room and self.active_room:
+            hero_r, hero_c = self.active_room.get_hero_position()
+        else:
+            hero_r, hero_c = self.dungeon.hero_x, self.dungeon.hero_y
+
+        # Convert grid position to pixel position
+        x = hero_c * cell_size + cell_size // 2
+        y = hero_r * cell_size + cell_size // 2
+
+        projectile = Projectile(x, y, dx, dy)
+        self.projectiles.append(projectile)
+
+    def update_projectiles(self, cell_size):
+        if not self.in_room or not self.active_room:
+            return
+
+        room = self.active_room
+        for projectile in self.projectiles:
+            projectile.update()
+            px, py = projectile.get_position()
+
+            grid_x = int(px / cell_size)
+            grid_y = int(py / cell_size)
+
+            monster = room.get_monster_at(grid_y, grid_x)
+            if monster:
+                print(f"🏹 Rudy's projectile hits {monster.name} at ({grid_y}, {grid_x})")
+                self.hero.attack(monster)
+                monster.flash_hit()
+                if not monster.is_alive():
+                    print(f"💀 {monster.name} was killed by a projectile.")
+                    del room.monsters[monster]
+                projectile.deactivate()
+
+        self._projectiles = [p for p in self.projectiles if p.active]
+
+    @property
+    def projectiles(self):
+        return self._projectiles
 
     def exit_room(self):
         self.in_room = False

@@ -1,18 +1,21 @@
 import pygame
+import math
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
 from view.menu_button import Button
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
+from model.room import Room
+
 
 def main():
     pygame.init()
 
-    # Fullscreen mode
     info = pygame.display.Info()
     WIDTH, HEIGHT = info.current_w, info.current_h
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+    pygame.event.set_grab(True)
     pygame.display.set_caption("Dungeon Adventure")
 
     FIXED_VIEW_ROWS = 15
@@ -20,17 +23,33 @@ def main():
     FIXED_VIEW_COLS = WIDTH // CELL_SIZE
 
     clock = pygame.time.Clock()
-    game = DungeonAdventure()
     view = GameView(screen, CELL_SIZE, view_rows=FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
 
     hero_last_move_time = 0
     hero_move_delay = 150
     running = True
-    state = "main_menu" 
+    state = "main_menu"
     game = None
+    hero_screen_x = 0
+    hero_screen_y = 0
 
     while running:
         screen.fill((0, 0, 0))
+        if state in ["main_menu", "difficulty_menu"]:
+            pygame.mouse.set_visible(True)
+        else:
+            pygame.mouse.set_visible(False)
+        if game and state == "playing":
+            if game.in_room:
+                hero_r, hero_c = game.active_room.get_hero_position()
+            else:
+                hero_r, hero_c = game.dungeon.hero_x, game.dungeon.hero_y
+
+            start_r = max(0, min(game.dungeon.rows - FIXED_VIEW_ROWS, hero_r - FIXED_VIEW_ROWS // 2))
+            start_c = max(0, min(game.dungeon.cols - FIXED_VIEW_COLS, hero_c - FIXED_VIEW_COLS // 2))
+            hero_screen_x = (hero_c - start_c) * CELL_SIZE + CELL_SIZE // 2
+            hero_screen_y = (hero_r - start_r) * CELL_SIZE + CELL_SIZE // 2
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -51,11 +70,8 @@ def main():
                 for button in view.difficulty_buttons:
                     if button.is_clicked(event):
                         difficulty = button.text.lower()
-                        from model.room import Room
                         Room.set_difficulty(difficulty)
                         game = DungeonAdventure()
-                        if hasattr(game, "set_difficulty"):
-                            game.set_difficulty(difficulty)
                         print(f"Started game on {difficulty.upper()}")
                         state = "playing"
 
@@ -65,9 +81,26 @@ def main():
                         state = "main_menu"
                     elif game.in_room and event.key == pygame.K_q:
                         game.exit_room()
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    game.perform_melee_attack()
-                    view.show_melee_attack()
+                    elif event.key == pygame.K_e:
+                        game.perform_ranged_attack(CELL_SIZE)
+
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        game.perform_melee_attack()
+                        view.show_melee_attack()
+                    elif event.button == 3:
+                        game.perform_ranged_attack(CELL_SIZE)
+
+                elif event.type == pygame.MOUSEMOTION and state == "playing":
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+                    dx = mouse_x - hero_screen_x
+                    dy = mouse_y - hero_screen_y
+                    length = math.hypot(dx, dy)
+
+                    if length != 0:
+                        raw_vector = pygame.math.Vector2(dx / length, dy / length)
+                        smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
+                        game.aim_vector = (smoothed.x, smoothed.y)
 
         if state == "main_menu":
             view.draw_buttons(view.menu_buttons)
@@ -82,30 +115,13 @@ def main():
             if keys[pygame.K_d]: dy += 1
 
             game.move_monsters()
+            game.update_projectiles(view.cell_size)
+
             if dx != 0 or dy != 0:
                 current_time = pygame.time.get_ticks()
                 if current_time - hero_last_move_time >= hero_move_delay:
                     game.move_hero(dx, dy)
                     hero_last_move_time = current_time
-
-            if game.in_room:
-                hero_r, hero_c = game.active_room.get_hero_position()
-                room = game.active_room
-            else:
-                hero_r = game.dungeon.hero_x
-                hero_c = game.dungeon.hero_y
-
-            start_r = max(0, min(game.dungeon.rows - FIXED_VIEW_ROWS, hero_r - FIXED_VIEW_ROWS // 2))
-            start_c = max(0, min(game.dungeon.cols - FIXED_VIEW_COLS, hero_c - FIXED_VIEW_COLS // 2))
-            hero_screen_x = (hero_c - start_c) * CELL_SIZE + CELL_SIZE // 2
-            hero_screen_y = (hero_r - start_r) * CELL_SIZE + CELL_SIZE // 2
-
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            aim_dx = mouse_x - hero_screen_x
-            aim_dy = mouse_y - hero_screen_y
-            length = (aim_dx ** 2 + aim_dy ** 2) ** 0.5
-            if length != 0:
-                game.aim_vector = (aim_dx / length, aim_dy / length)
 
             if game.in_room:
                 view.draw_room(game, WIDTH, HEIGHT, Ogre, Skeleton, Gremlin)
@@ -116,6 +132,7 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()

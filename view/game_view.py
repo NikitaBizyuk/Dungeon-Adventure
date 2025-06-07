@@ -98,17 +98,25 @@ class GameView:
                         ay = int(center_y + reach * math.sin(angle))
                         pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
 
-    def draw_room(self, game, width, height,ogre,skeleton,gremlin):
+    def draw_room(self, game, width, height, ogre, skeleton, gremlin):
         room = game.active_room
-        view_rows = self.view_rows
-        view_cols = self.view_cols
-
         hero_r, hero_c = room.get_hero_position()
         monsters = room.get_monsters()
-        start_r = max(0, min(max(0, room.height - view_rows), hero_r - view_rows // 2))
-        start_c = max(0, min(max(0, room.width - view_cols), hero_c - view_cols // 2))
-        end_r = min(start_r + view_rows, room.height)
-        end_c = min(start_c + view_cols, room.width)
+
+        start_r = max(0, min(max(0, room.height - self.view_rows), hero_r - self.view_rows // 2))
+        start_c = max(0, min(max(0, room.width - self.view_cols), hero_c - self.view_cols // 2))
+        end_r = min(start_r + self.view_rows, room.height)
+        end_c = min(start_c + self.view_cols, room.width)
+
+        room_tile_width = end_c - start_c
+        room_tile_height = end_r - start_r
+        cell_size = min(width // room_tile_width, height // room_tile_height)
+
+        # ✅ Compute screen offsets to center the room
+        total_width_used = room_tile_width * cell_size
+        total_height_used = room_tile_height * cell_size
+        offset_x = (width - total_width_used) // 2
+        offset_y = (height - total_height_used) // 2
 
         base_colors = {
             "wall": (40, 40, 40),
@@ -122,39 +130,32 @@ class GameView:
             "Vision Potion": (255, 192, 203)
         }
 
-        room_tile_width = end_c - start_c
-        room_tile_height = end_r - start_r
-
-        cell_w = width // room_tile_width
-        cell_h = height // room_tile_height
-        cell_size = min(cell_w, cell_h)  # Make tiles square
-
-        # Draw tiles
+        # ─── Draw tiles ───
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 tile = room.get_tile(r, c)
-                screen_x = (c - start_c) * cell_size
-                screen_y = (r - start_r) * cell_size
+                screen_x = offset_x + (c - start_c) * cell_size
+                screen_y = offset_y + (r - start_r) * cell_size
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
                 color = base_colors.get(tile, (255, 0, 255))
                 pygame.draw.rect(self.screen, color, rect)
 
-        # Draw hero
-        center_x = (hero_c - start_c) * cell_size + cell_size // 2
-        center_y = (hero_r - start_r) * cell_size + cell_size // 2
+        # ─── Draw Hero ───
+        center_x = offset_x + (hero_c - start_c) * cell_size + cell_size // 2
+        center_y = offset_y + (hero_r - start_r) * cell_size + cell_size // 2
         pygame.draw.circle(self.screen, (255, 0, 0), (center_x, center_y), cell_size // 3)
 
-        # Draw aim direction
+        # ─── Aim direction ───
         aim_dx, aim_dy = game.aim_vector
         end_x = int(center_x + aim_dx * 40)
         end_y = int(center_y + aim_dy * 40)
         pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
 
+        # ─── Draw Monsters ───
         for monster, (mr, mc) in monsters.items():
-            screen_x = (mc - start_c) * self.cell_size
-            screen_y = (mr - start_r) * self.cell_size
+            screen_x = offset_x + (mc - start_c) * cell_size
+            screen_y = offset_y + (mr - start_r) * cell_size
 
-            # Determine monster base color
             if isinstance(monster, ogre):
                 base_color = (0, 250, 0)
             elif isinstance(monster, skeleton):
@@ -162,16 +163,22 @@ class GameView:
             elif isinstance(monster, gremlin):
                 base_color = (0, 0, 250)
             else:
-                base_color = (255, 0, 255)  # fallback
+                base_color = (255, 0, 255)
 
-            pos = (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2)
-
-            # Flashing outline if recently hit
+            pos = (screen_x + cell_size // 2, screen_y + cell_size // 2)
             if hasattr(monster, "is_flashing") and monster.is_flashing():
-                pygame.draw.circle(self.screen, (255, 0, 0), pos, self.cell_size // 2)  # red outer outline
+                pygame.draw.circle(self.screen, (255, 0, 0), pos, cell_size // 2)
 
-            pygame.draw.circle(self.screen, base_color, pos, self.cell_size // 3)  # inner color
+            pygame.draw.circle(self.screen, base_color, pos, cell_size // 3)
 
+        # ─── Draw Projectiles ───
+        for projectile in game.projectiles:
+            px, py = projectile.get_position()
+            draw_x = offset_x + px - (start_c * cell_size)
+            draw_y = offset_y + py - (start_r * cell_size)
+            pygame.draw.circle(self.screen, (255, 255, 255), (int(draw_x), int(draw_y)), 5)
+
+        # ─── Draw Melee Arc ───
         current_time = pygame.time.get_ticks()
         if current_time - self.last_attack_time < self.attack_duration:
             style = game.hero.get_melee_style()
