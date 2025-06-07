@@ -1,11 +1,12 @@
 import pygame
 
 class Projectile:
-    def __init__(self, x, y, dx, dy, speed=10):
+    def __init__(self, x, y, dx, dy, speed=10, damage=10):
         self.x = x
         self.y = y
         self.velocity = pygame.math.Vector2(dx, dy).normalize() * speed
         self.radius = 5
+        self.damage = damage
         self.active = True
 
     def update(self):

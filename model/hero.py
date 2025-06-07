@@ -40,7 +40,23 @@ class Hero(DungeonCharacter, ABC):
             self.health_points -= amount
             print(f"{self.name} took {amount} damage. HP: {self.health_points}")
 
+    @property
+    @abstractmethod
+    def projectile_cooldown(self):
+        """Time in ms between shots."""
+        raise NotImplementedError("Each hero must define their projectile cooldown.")
 
+    @property
+    @abstractmethod
+    def projectile_speed(self):
+        """Pixels per frame."""
+        raise NotImplementedError("Each hero must define their projectile speed.")
+
+    @property
+    @abstractmethod
+    def projectile_damage(self):
+        """Damage dealt per projectile."""
+        raise NotImplementedError("Each hero must define their projectile damage.")
 
     @property
     def pillars_found(self):

@@ -12,17 +12,35 @@ class Thief(Hero):
         chance_to_hit = 0.8
         super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
-    def attack(self, target):
-        print(f"{self.name} performs a quick dual stab!")
-        for i in range(2):
-            if random.random() < self.chance_to_hit:
-                damage = random.randint(self.damage_min, self.damage_max)
-                print(f"  Hit {i + 1}: {damage} damage.")
-                target.take_damage(damage)
-            else:
-                print(f"  Hit {i + 1}: missed!")
+    def attack(self, target, damage=None):
+        if damage is not None:
+            # Projectile logic — single fast hit
+            print(f"{self.name} hurls a throwing knife for {damage} damage.")
+            target.take_damage(damage)
+        else:
+            # Melee logic — dual stab with hit chance
+            print(f"{self.name} performs a quick dual stab!")
+            for i in range(2):
+                if random.random() < self.chance_to_hit:
+                    dmg = random.randint(self.damage_min, self.damage_max)
+                    print(f"  Hit {i + 1}: {dmg} damage.")
+                    target.take_damage(dmg)
+                else:
+                    print(f"  Hit {i + 1}: missed!")
 
-#Thief special skill goes here
+    @property
+    def projectile_cooldown(self):
+        return 300
+
+    @property
+    def projectile_speed(self):
+        return 12
+
+    @property
+    def projectile_damage(self):
+        return 10
+
+    #Thief special skill goes here
     def special_skill(self, target):
         pass
 

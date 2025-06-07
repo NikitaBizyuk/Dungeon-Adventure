@@ -13,22 +13,41 @@ class Priestess(Hero):
         damage_max = 45
         super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
-    def attack(self, target):
-        if random.random() < self.chance_to_hit:
-            damage = random.randint(self.damage_min, self.damage_max)
-            print(f"{self.name} strikes with her staff for {damage} damage.")
+    def attack(self, target, damage=None):
+        if damage is not None:
+            # Projectile logic: guaranteed hit
+            print(f"{self.name} fires a sacred blast for {damage} damage.")
             target.take_damage(damage)
-            # 25% chance to self-heal for 10–20 HP
-            if random.random() < 0.25:
-                heal = random.randint(10, 20)
-                self.health_points += heal
-                print(f"{self.name} heals herself for {heal} HP! New HP: {self.health_points}")
         else:
-            print(f"{self.name}'s staff attack missed!")
+            # Melee logic with hit chance and healing
+            if random.random() < self.chance_to_hit:
+                damage = random.randint(self.damage_min, self.damage_max)
+                print(f"{self.name} strikes with her staff for {damage} damage.")
+                target.take_damage(damage)
 
-## Priestess special skill goes here
+                # 25% chance to heal 10–20 HP
+                if random.random() < 0.25:
+                    heal = random.randint(10, 20)
+                    self.health_points += heal
+                    print(f"{self.name} heals herself for {heal} HP! New HP: {self.health_points}")
+            else:
+                print(f"{self.name}'s staff attack missed!")
+
+    ## Priestess special skill goes here
     def special_skill(self, target):
         pass
+
+    @property
+    def projectile_cooldown(self):
+        return 600
+
+    @property
+    def projectile_speed(self):
+        return 10
+
+    @property
+    def projectile_damage(self):
+        return 20
 
     def get_melee_style(self):
         return {

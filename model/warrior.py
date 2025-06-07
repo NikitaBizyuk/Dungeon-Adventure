@@ -12,13 +12,19 @@ class Warrior(Hero):
         chance_to_hit = 0.8
         super().__init__(name, health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
-    def attack(self, target):
-        if random.random() < self.chance_to_hit:
-            damage = random.randint(self.damage_min, self.damage_max)
-            print(f"{self.name} slashes for {damage} damage.")
+    def attack(self, target, damage=None):
+        if damage is not None:
+            # Projectile logic — heavy axe throw
+            print(f"{self.name} hurls a heavy axe for {damage} damage!")
             target.take_damage(damage)
         else:
-            print(f"{self.name}'s sword attack missed!")
+            # Melee logic — single sword slash with hit chance
+            if random.random() < self.chance_to_hit:
+                damage = random.randint(self.damage_min, self.damage_max)
+                print(f"{self.name} slashes for {damage} damage.")
+                target.take_damage(damage)
+            else:
+                print(f"{self.name}'s sword attack missed!")
 
     def special_skill(self, target):
         if random.random() < 0.4:
@@ -27,6 +33,19 @@ class Warrior(Hero):
             target.take_damage(damage)
         else:
             print(f"{self.name()}'s Crushing Blow missed!")
+
+    @property
+    def projectile_cooldown(self):
+        return 800
+
+    @property
+    def projectile_speed(self):
+        return 8
+
+    @property
+    def projectile_damage(self):
+        return 25
+
 
     def get_melee_style(self):
         return {
