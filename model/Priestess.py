@@ -25,10 +25,10 @@ class Priestess(Hero):
                 print(f"{self.name} strikes with her staff for {damage} damage.")
                 target.take_damage(damage)
 
-                # 25% chance to heal 10–20 HP
-                if random.random() < 0.25:
-                    heal = random.randint(10, 20)
-                    self.health_points += heal
+                # Only heal if not at max HP, and with lower probability
+                if self.health_points < 100 and random.random() < 0.1:  # 10% chance
+                    heal = random.randint(8, 16)
+                    self.health_points = min(self.health_points + heal, 100)
                     print(f"{self.name} heals herself for {heal} HP! New HP: {self.health_points}")
             else:
                 print(f"{self.name}'s staff attack missed!")

@@ -32,3 +32,11 @@ class Monster(DungeonCharacter, ABC):
 
     def get_heal_points(self):
         return self._chance_to_heal
+
+    def attack_hero(self, hero):
+        if random.random() < self._chance_to_hit:
+            damage = random.randint(self._damage_min, self._damage_max)
+            print(f"{self._name} attacks {hero.name} for {damage} damage.")
+            hero.take_damage(damage)
+        else:
+            print(f"{self._name}'s attack missed!")

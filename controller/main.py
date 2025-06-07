@@ -2,7 +2,6 @@ import pygame
 import math
 from controller.dungeon_adventure import DungeonAdventure
 from view.game_view import GameView
-from view.menu_button import Button
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
@@ -118,6 +117,7 @@ def main():
             if keys[pygame.K_d]: dy += 1
 
             game.move_monsters()
+            game.monster_attack_hero()
             game.update_projectiles(view.cell_size)
 
             if dx != 0 or dy != 0:

@@ -120,6 +120,25 @@ class DungeonAdventure:
     def projectiles(self):
         return self._projectiles
 
+    def monster_attack_hero(self):
+        if not self.in_room or not self.active_room:
+            return
+
+        hero_r, hero_c = self.active_room.get_hero_position()
+
+        for monster, (mr, mc) in self.active_room.monsters.items():
+            # Check if adjacent (4-directional)
+            if abs(mr - hero_r) + abs(mc - hero_c) == 1:
+                print(f"💀 {monster.name} is adjacent to the hero and attacks!")
+                monster.attack(self.hero)
+                self.check_hero_defeated()
+
+    def check_hero_defeated(self):
+        if self.hero.health_points <= 0:
+            print(f"💀 {self.hero.name} has been defeated! Returning to maze with full HP...")
+            self.hero.health_points = 100  # Reset HP (or whatever max you want)
+            self.exit_room()
+
     def get_hero(self):
         return self.hero
 
