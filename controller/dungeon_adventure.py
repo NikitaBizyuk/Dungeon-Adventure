@@ -9,12 +9,14 @@ from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.room import Room
+from model.backpack import BackPack
 import random
 
 class DungeonAdventure:
     def __init__(self):
         self.dungeon = Dungeon(difficulty=Room._current_difficulty)
         self.hero = Priestess("Rudy")
+        self.my_back_pack = BackPack()
         self.in_room = False
         self.active_room = None
         self.aim_vector = (1, 0)
@@ -22,7 +24,7 @@ class DungeonAdventure:
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
-            status = self.dungeon.active_room.move_hero_in_room(dx, dy)
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy,self.my_back_pack)
             if status == "exit":
                 self.dungeon.in_room = False
                 self.dungeon.active_room = None
@@ -62,6 +64,12 @@ class DungeonAdventure:
                 if not monster.is_alive():
                     print(f"💀 {monster.name} has died and is removed from the room.")
                     del self.active_room.monsters[monster]
+
+    def get_hero(self):
+        return self.hero
+
+    def get_backpack(self):
+        return self.my_back_pack
 
     def exit_room(self):
         self.in_room = False

@@ -1,11 +1,11 @@
 import random
 from model.MonsterFactory import MonsterFactory
+from model.OOPillars import OOPillars
 
 class Room:
     # ───── Static class-level values ─────
     room_ID = 0
-    loot = ["Encapsulation", "Abstraction", "Polymorphism",
-            "Inheritance", "Health Potion", "Vision Potion"]
+    loot = ["A", "E", "I","P", "Health Potion", "Vision Potion"]
 
     _DIFFICULTY_TO_RANGE = {
         "easy": (1, 3),
@@ -51,8 +51,9 @@ class Room:
         for r in range(1, self.height - 1):
             for c in range(1, self.width - 1):
                 if r == (self.height - 1) / 2 and c == (self.width - 1) / 2:
+                    random.shuffle(self.loot)
                     self.grid[r][c] = Room.loot[0]
-                    if Room.loot[0] in {"Encapsulation", "Abstraction", "Polymorphism", "Inheritance"}:
+                    if Room.loot[0] in {"A", "E", "I", "P"}:
                         Room.loot.pop(0)
                 else:
                     self.grid[r][c] = "floor"
@@ -88,7 +89,7 @@ class Room:
 
         self.monsters = new_positions
 
-    def move_hero_in_room(self, dx, dy):
+    def move_hero_in_room(self, dx, dy, back_pack):
         nr = self.hero_r + dx
         nc = self.hero_c + dy
 
@@ -96,11 +97,15 @@ class Room:
             target = self.grid[nr][nc]
             if any((nr, nc) == (mr, mc) for (mr, mc) in self.monsters.values()):
                 return None
-            if target in ["floor", "door"]:
+            if target in ["floor", "door","A","E","I","P","Health Potion","Vision Potion"]:
                 self.hero_r = nr
                 self.hero_c = nc
                 if target == "door":
                     return "exit"
+            if target in ["A","E","I","P","Health Potion", "Vision Potion"]:
+                back_pack.add(target)
+                self.grid[nr][nc] = "floor"
+                print("my back pack has",back_pack.to_string())
         return None
 
     # ───── Accessors ─────
