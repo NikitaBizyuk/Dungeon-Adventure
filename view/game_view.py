@@ -10,9 +10,9 @@ class GameView:
         self.last_attack_time = 0
         self.attack_duration = 150
         self.font = pygame.font.Font(None, 60)
-
         self.menu_buttons = self.create_menu_buttons()
         self.difficulty_buttons = self.create_difficulty_buttons()
+        self.show_inventory = False
 
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -35,7 +35,7 @@ class GameView:
         for button in buttons:
             button.draw(self.screen)
 
-    def draw_maze(self, game):
+    def draw_maze(self, game,width, height,hero,backpack):
         dungeon = game.dungeon
         hero_x = dungeon.hero_x
         hero_y = dungeon.hero_y
@@ -53,7 +53,7 @@ class GameView:
             "door": (0, 128, 255),
             "exit": (0, 255, 128)
         }
-    #update varianles better
+    #update variables better
         for r in range(start_r, end_r):
             for c in range(start_c, end_c):
                 cell = dungeon.maze[r][c]
@@ -97,8 +97,11 @@ class GameView:
                         ax = int(center_x + reach * math.cos(angle))
                         ay = int(center_y + reach * math.sin(angle))
                         pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
-
-    def draw_room(self, game, width, height, ogre, skeleton, gremlin):
+            self.health_bar(width, height, hero)
+            if self.show_inventory:
+                self.draw_inventory(backpack)
+    def draw_room(self, game, width, height,hero,backpack,ogre,skeleton,gremlin,
+                  pillar_1,pillar_2,pillar_3,pillar_4):
         room = game.active_room
         hero_r, hero_c = room.get_hero_position()
         monsters = room.get_monsters()
@@ -122,12 +125,12 @@ class GameView:
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
             "door": (0, 128, 255),
-            "Encapsulation": (255, 215, 0),
-            "Polymorphism": (255, 215, 0),
-            "Abstraction": (255, 215, 0),
-            "Inheritance": (255, 215, 0),
-            "Health Potion": (255, 192, 203),
-            "Vision Potion": (255, 192, 203)
+            pillar_1: (255, 215, 0), #gold
+            pillar_2: (255, 215, 0), #gold
+            pillar_3: (255, 215, 0), #gold
+            pillar_4: (255, 215, 0), #gold
+            "Health Potion": (255, 192, 203), #pink for health
+            "Vision Potion": (128, 0, 128) #purple for vision
         }
 
         # ─── Draw tiles ───
@@ -138,6 +141,10 @@ class GameView:
                 screen_y = offset_y + (r - start_r) * cell_size
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
                 color = base_colors.get(tile, (255, 0, 255))
+               ## If tile is a pillar, make gold
+                if (tile == "A" or tile == "E" or
+                    tile == "I" or tile == "P"):
+                    color = base_colors.get(tile,(255,215,0))
                 pygame.draw.rect(self.screen, color, rect)
 
         # ─── Draw Hero ───
@@ -194,7 +201,51 @@ class GameView:
                 ax = int(center_x + reach * math.cos(angle))
                 ay = int(center_y + reach * math.sin(angle))
                 pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
+        self.health_bar(width,height,hero)
+        if self.show_inventory:
+            self.draw_inventory(backpack)
+    def health_bar(self,width,height,hero):
+        max_bar_width = width - 800
+        bar_height = 20
+        bar_x = 20
+        bar_y = height - bar_height - 10
 
+        hp = hero.health_points
+        max_hp = 100
+        hp_ratio = max(hp / max_hp, 0)  # prevent negative
+        # Green portion (actual HP)
+        hp_bar_width = int(max_bar_width * hp_ratio)
+        hp_bar_rect = pygame.Rect(bar_x, bar_y, hp_bar_width, bar_height)
+        pygame.draw.rect(self.screen, (0, 255, 0), hp_bar_rect)
+        # Bar outline
+        border_rect = pygame.Rect(bar_x, bar_y, max_bar_width, bar_height)
+        pygame.draw.rect(self.screen, (0, 0, 0), border_rect, 2)
+        # Optional: Add HP text
+        font = pygame.font.Font(None, 30)
+        hp_text = font.render(f"HP: {hp}/{max_hp}", True, (255, 255, 255))
+        text_rect = hp_text.get_rect(center=(bar_x + max_bar_width // 2, bar_y + bar_height // 2))
+        self.screen.blit(hp_text, text_rect)
     def show_melee_attack(self):
         self.last_attack_time = pygame.time.get_ticks()
+
+    def draw_inventory(self, backpack):
+        # Simple overlay box
+        inv_rect = pygame.Rect(100, 100, 400, 300)
+        pygame.draw.rect(self.screen, (50, 50, 50), inv_rect)  # background
+        pygame.draw.rect(self.screen, (255, 255, 255), inv_rect, 3)  # border
+        font = pygame.font.Font(None, 30)
+        title = font.render("Inventory", True, (255, 255, 0))
+        self.screen.blit(title, (inv_rect.x + 10, inv_rect.y + 10))
+        unique_items = set(backpack.get_inventory())  # removes duplicates
+        count = 0
+        for idx, item in enumerate(unique_items):
+            if item == "Vision Potion":
+                count = backpack.get_vision_cntr()
+            if item == "Health Potion":
+                count = backpack.get_healing_cntr()
+            if item in {"A", "E", "I", "P"}:
+                count = backpack.get_pillar_cntr()
+              # fallback count
+            item_text = font.render(f"- {item}: {count}", True, (255, 255, 255))
+            self.screen.blit(item_text, (inv_rect.x + 20, inv_rect.y + 40 + idx * 25))
 

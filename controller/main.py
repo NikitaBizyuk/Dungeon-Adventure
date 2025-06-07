@@ -6,6 +6,7 @@ from view.menu_button import Button
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
+from model.OOPillars import OOPillars
 from model.room import Room
 
 
@@ -79,6 +80,8 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         state = "main_menu"
+                    elif event.key == pygame.K_TAB:
+                        view.show_inventory = not view.show_inventory
                     elif game.in_room and event.key == pygame.K_q:
                         game.exit_room()
                     elif event.key == pygame.K_e:
@@ -124,9 +127,11 @@ def main():
                     hero_last_move_time = current_time
 
             if game.in_room:
-                view.draw_room(game, WIDTH, HEIGHT, Ogre, Skeleton, Gremlin)
+                view.draw_room(game, WIDTH, HEIGHT,game.get_hero(),game.get_backpack(), Ogre, Skeleton, Gremlin, OOPillars.ENCAPSULATION.symbol,
+                               OOPillars.POLYMORPHISM.symbol, OOPillars.INHERITANCE.symbol,
+                               OOPillars.ABSTRACTION.symbol)
             else:
-                view.draw_maze(game)
+                view.draw_maze(game,WIDTH,HEIGHT,game.get_hero(),game.get_backpack())
 
         pygame.display.flip()
         clock.tick(60)

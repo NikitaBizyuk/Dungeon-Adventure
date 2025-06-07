@@ -1,5 +1,4 @@
 import pygame
-import random
 import math
 from model.dungeon import Dungeon
 from model.Priestess import Priestess
@@ -11,11 +10,14 @@ from model.Ogre import Ogre
 from model.room import Room
 from model.projectile import Projectile
 
+from model.backpack import BackPack
+import random
 
 class DungeonAdventure:
     def __init__(self):
         self.dungeon = Dungeon(difficulty=Room._current_difficulty)
         self.hero = Priestess("Rudy")  # You can swap for Warrior("...") or Thief("...") here
+        self.my_back_pack = BackPack()
         self.in_room = False
         self.active_room = None
         self.aim_vector = (1, 0)
@@ -25,7 +27,7 @@ class DungeonAdventure:
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
-            status = self.dungeon.active_room.move_hero_in_room(dx, dy)
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy,self.my_back_pack)
             if status == "exit":
                 self.dungeon.in_room = False
                 self.dungeon.active_room = None
@@ -117,6 +119,12 @@ class DungeonAdventure:
     @property
     def projectiles(self):
         return self._projectiles
+
+    def get_hero(self):
+        return self.hero
+
+    def get_backpack(self):
+        return self.my_back_pack
 
     def exit_room(self):
         self.in_room = False
