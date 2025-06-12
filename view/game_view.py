@@ -20,6 +20,7 @@ class GameView:
         image_path = os.path.join(os.path.dirname(__file__), "..", "assets", "DungeonBackground.png")
         self.menu_bg = pygame.image.load(image_path).convert()
         self.menu_bg = pygame.transform.scale(self.menu_bg, self.screen.get_size())
+        self.pause_buttons = self.create_pause_menu_buttons()
 
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -36,6 +37,15 @@ class GameView:
             Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
             Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2, 200, 60), self.font, (200, 200, 200), (255, 165, 0)),
             Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
+        ]
+
+    def create_pause_menu_buttons(self):
+        w, h = self.screen.get_size()
+        return [
+            Button("RESUME", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
+            Button("SAVE", pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("ABOUT", pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60), self.font, (200, 200, 200), (0, 128, 255)),
+            Button("BACK", pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
         ]
 
     def draw_buttons(self, buttons):
