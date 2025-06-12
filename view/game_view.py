@@ -1,4 +1,5 @@
 import pygame
+import os
 import math
 from view.menu_button import Button
 class GameView:
@@ -13,6 +14,9 @@ class GameView:
         self.menu_buttons = self.create_menu_buttons()
         self.difficulty_buttons = self.create_difficulty_buttons()
         self.show_inventory = False
+        image_path = os.path.join(os.path.dirname(__file__), "..", "assets", "DungeonBackground.png")
+        self.menu_bg = pygame.image.load(image_path).convert()
+        self.menu_bg = pygame.transform.scale(self.menu_bg, self.screen.get_size())
 
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -32,6 +36,7 @@ class GameView:
         ]
 
     def draw_buttons(self, buttons):
+        self.screen.blit(self.menu_bg, (0, 0))
         for button in buttons:
             button.draw(self.screen)
 
@@ -251,7 +256,6 @@ class GameView:
 
     def draw_about_screen(self):
         self.screen.fill((0, 0, 0))  # Clear the screen
-
         lines = [
             "Dungeon Adventure Game",
             "Version: 1.0 June 11th 2025",
