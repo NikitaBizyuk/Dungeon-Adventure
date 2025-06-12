@@ -45,7 +45,8 @@ class GameView:
 
     def display_message(self, message, duration=2000):
         self.message = message
-        self.message_start = pygame.time.get_ticks()
+        self.message_start_time = pygame.time.get_ticks()
+
         self.message_duration = duration
 
     def draw_message(self):
@@ -114,13 +115,15 @@ class GameView:
                 screen_y = (r - start_r) * self.cell_size
                 rect = pygame.Rect(screen_x, screen_y, self.cell_size, self.cell_size)
 
+                now = pygame.time.get_ticks()
+                vision_active = game.vision_reveal_start and now - game.vision_reveal_start < game.vision_reveal_duration
                 if not cell.explored:
                     color = (0, 0, 0)
-                elif not cell.visible:
+                elif vision_active or cell.visible:
+                    color = base_colors.get(cell.cell_type, (255, 0, 255))
+                else:
                     base = base_colors.get(cell.cell_type, (100, 100, 100))
                     color = tuple(int(x * 0.35) for x in base)
-                else:
-                    color = base_colors.get(cell.cell_type, (255, 0, 255))
 
                 pygame.draw.rect(self.screen, color, rect)
 
@@ -296,18 +299,27 @@ class GameView:
         pygame.draw.rect(self.screen, (50, 50, 50), inv_rect)  # background
         pygame.draw.rect(self.screen, (255, 255, 255), inv_rect, 3)  # border
         font = pygame.font.Font(None, 30)
+
         title = font.render("Inventory", True, (255, 255, 0))
         self.screen.blit(title, (inv_rect.x + 10, inv_rect.y + 10))
-        unique_items = set(backpack.get_inventory())  # removes duplicates
-        count = 0
-        for idx, item in enumerate(unique_items):
-            if item == "Vision Potion":
-                count = backpack.get_vision_cntr()
-            if item == "Health Potion":
-                count = backpack.get_healing_cntr()
+
+        items_to_display = {}
+
+        # Static potions (tracked by counters)
+        if backpack.get_healing_cntr() > 0:
+            items_to_display["Health Potion"] = backpack.get_healing_cntr()
+        if backpack.get_vision_cntr() > 0:
+            items_to_display["Vision Potion"] = backpack.get_vision_cntr()
+
+        # Pillars (tracked by symbol in inventory list)
+        from collections import Counter
+        inv_items = Counter(backpack.get_inventory())
+        for item in inv_items:
             if item in {"A", "E", "I", "P"}:
-                count = backpack.get_pillar_cntr()
-              # fallback count
+                items_to_display[item] = inv_items[item]
+
+        # Draw each item
+        for idx, (item, count) in enumerate(items_to_display.items()):
             item_text = font.render(f"- {item}: {count}", True, (255, 255, 255))
             self.screen.blit(item_text, (inv_rect.x + 20, inv_rect.y + 40 + idx * 25))
 

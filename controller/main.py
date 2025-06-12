@@ -93,6 +93,18 @@ def main():
                         if game.in_room:
                             special_message = game.perform_special_attack()
                             view.display_message(special_message)
+                    elif event.key == pygame.K_h:  # 'H' to use healing potion
+                        if game.get_backpack().get_healing_cntr() > 0:
+                            game.get_backpack().use_healing_potion()
+                            game.get_hero().health_points = min(
+                                game.get_hero().health_points + 20,
+                                game.get_hero()._max_health_points
+                            )
+                            view.display_message("Used Health Potion (+20 HP)", 2000)
+                    elif event.key == pygame.K_v:  # Press V to use Vision Potion
+                        if game.get_backpack().use_vision_potion():
+                            game.vision_reveal_start = pygame.time.get_ticks()
+                            view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -110,6 +122,9 @@ def main():
                         raw_vector = pygame.math.Vector2(dx / length, dy / length)
                         smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
                         game.aim_vector = (smoothed.x, smoothed.y)
+                elif game.get_backpack().found_all_pillars():
+                    view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!", 3000)
+
 
         if state == "main_menu":
             view.draw_buttons(view.menu_buttons)

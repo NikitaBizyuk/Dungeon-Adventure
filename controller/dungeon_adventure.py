@@ -27,6 +27,8 @@ class DungeonAdventure:
         self.special_cooldown = 8000  # 8 seconds cooldown
         self.special_duration = 3000  # 3 seconds active
         self.last_special_used = -9999
+        self.vision_reveal_start = None
+        self.vision_reveal_duration = 3000  # milliseconds
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
