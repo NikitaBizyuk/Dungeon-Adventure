@@ -15,7 +15,6 @@ def main():
     info = pygame.display.Info()
     WIDTH, HEIGHT = info.current_w, info.current_h
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-    pygame.event.set_grab(True)
     pygame.display.set_caption("Dungeon Adventure")
 
     FIXED_VIEW_ROWS = 15
@@ -29,16 +28,21 @@ def main():
     hero_move_delay = 150
     running = True
     state = "main_menu"
+    pause_state = False
+    resume_countdown = 0
+    prev_menu_state = None  # <--- Added
     game = None
     hero_screen_x = 0
     hero_screen_y = 0
 
     while running:
         screen.fill((0, 0, 0))
-        if state in ["main_menu", "difficulty_menu", "about_screen"]:
+        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu"]:
             pygame.mouse.set_visible(True)
+            pygame.event.set_grab(False)
         else:
             pygame.mouse.set_visible(False)
+            pygame.event.set_grab(True)
 
         if game and state == "playing":
             if game.in_room:
@@ -63,6 +67,7 @@ def main():
                         elif button.text == "LOAD":
                             print("NOT IMPLEMENTED YET")
                         elif button.text == "ABOUT":
+                            prev_menu_state = "main_menu"
                             state = "about_screen"
                         elif button.text == "QUIT":
                             running = False
@@ -75,56 +80,77 @@ def main():
                         game = DungeonAdventure()
                         print(f"Started game on {difficulty.upper()}")
                         state = "playing"
+
             elif state == "about_screen":
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    if prev_menu_state == "pause_menu":
+                        state = "pause_menu"
+                    else:
                         state = "main_menu"
+                        pause_state = False
+                    prev_menu_state = None
+
             elif state == "playing":
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        state = "main_menu"
-                    elif event.key == pygame.K_TAB:
-                        view.show_inventory = not view.show_inventory
-                    elif game.in_room and event.key == pygame.K_q:
-                        game.exit_room()
-                    elif event.key == pygame.K_e:
-                        game.perform_ranged_attack(CELL_SIZE)
-                    elif event.key == pygame.K_SPACE:
-                        if game.in_room:
-                            special_message = game.perform_special_attack()
-                            view.display_message(special_message)
-                    elif event.key == pygame.K_h:  # 'H' to use healing potion
-                        if game.get_backpack().get_healing_cntr() > 0:
-                            game.get_backpack().use_healing_potion()
-                            game.get_hero().health_points = min(
-                                game.get_hero().health_points + 20,
-                                game.get_hero()._max_health_points
-                            )
-                            view.display_message("Used Health Potion (+20 HP)", 2000)
-                    elif event.key == pygame.K_v:  # Press V to use Vision Potion
-                        if game.get_backpack().use_vision_potion():
-                            game.vision_reveal_start = pygame.time.get_ticks()
-                            view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    state = "pause_menu"
+                    pause_state = True
+                elif not pause_state:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_TAB:
+                            view.show_inventory = not view.show_inventory
+                        elif game.in_room and event.key == pygame.K_q:
+                            game.exit_room()
+                        elif event.key == pygame.K_e:
+                            game.perform_ranged_attack(CELL_SIZE)
+                        elif event.key == pygame.K_SPACE:
+                            if game.in_room:
+                                special_message = game.perform_special_attack()
+                                view.display_message(special_message)
+                        elif event.key == pygame.K_h:  # 'H' to use healing potion
+                            if game.get_backpack().get_healing_cntr() > 0:
+                                game.get_backpack().use_healing_potion()
+                                game.get_hero().health_points = min(
+                                    game.get_hero().health_points + 20,
+                                    game.get_hero()._max_health_points
+                                )
+                                view.display_message("Used Health Potion (+20 HP)", 2000)
+                        elif event.key == pygame.K_v:  # Press V to use Vision Potion
+                            if game.get_backpack().use_vision_potion():
+                                game.vision_reveal_start = pygame.time.get_ticks()
+                                view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            game.perform_melee_attack()
+                            view.show_melee_attack()
+                        elif event.button == 3:
+                            game.perform_ranged_attack(CELL_SIZE)
+                    elif event.type == pygame.MOUSEMOTION:
+                        mouse_x, mouse_y = pygame.mouse.get_pos()
+                        dx = mouse_x - hero_screen_x
+                        dy = mouse_y - hero_screen_y
+                        length = math.hypot(dx, dy)
+                        if length != 0:
+                            raw_vector = pygame.math.Vector2(dx / length, dy / length)
+                            smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
+                            game.aim_vector = (smoothed.x, smoothed.y)
+                    elif game.get_backpack().found_all_pillars():
+                        view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!", 3000)
 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        game.perform_melee_attack()
-                        view.show_melee_attack()
-                    elif event.button == 3:
-                        game.perform_ranged_attack(CELL_SIZE)
-
-                elif event.type == pygame.MOUSEMOTION and state == "playing":
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    dx = mouse_x - hero_screen_x
-                    dy = mouse_y - hero_screen_y
-                    length = math.hypot(dx, dy)
-                    if length != 0:
-                        raw_vector = pygame.math.Vector2(dx / length, dy / length)
-                        smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
-                        game.aim_vector = (smoothed.x, smoothed.y)
-                elif game.get_backpack().found_all_pillars():
-                    view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!", 3000)
-
+            elif state == "pause_menu":
+                for button in view.pause_buttons:
+                    if button.is_clicked(event):
+                        if button.text == "RESUME":
+                            resume_countdown = 180  # 3 sec @ 60 fps
+                            state = "countdown"
+                        elif button.text == "SAVE":
+                            print("SAVE not implemented yet.")
+                        elif button.text == "ABOUT":
+                            prev_menu_state = "pause_menu"
+                            state = "about_screen"
+                        elif button.text == "BACK":
+                            game = None
+                            state = "main_menu"
+                            pause_state = False
 
         if state == "main_menu":
             view.draw_buttons(view.menu_buttons)
@@ -132,23 +158,37 @@ def main():
             view.draw_buttons(view.difficulty_buttons)
         elif state == "about_screen":
             view.draw_about_screen()
+        elif state == "pause_menu":
+            view.draw_buttons(view.pause_buttons)
+        elif state == "countdown":
+            pause_state = True
+            seconds = resume_countdown // 60 + 1
+            font = pygame.font.Font(None, 200)
+            text = font.render(str(seconds), True, (255, 255, 255))
+            rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            screen.blit(text, rect)
+            resume_countdown -= 1
+            if resume_countdown <= 0:
+                state = "playing"
+                pause_state = False
         elif state == "playing":
-            keys = pygame.key.get_pressed()
-            dx, dy = 0, 0
-            if keys[pygame.K_w]: dx -= 1
-            if keys[pygame.K_s]: dx += 1
-            if keys[pygame.K_a]: dy -= 1
-            if keys[pygame.K_d]: dy += 1
+            if not pause_state:
+                keys = pygame.key.get_pressed()
+                dx, dy = 0, 0
+                if keys[pygame.K_w]: dx -= 1
+                if keys[pygame.K_s]: dx += 1
+                if keys[pygame.K_a]: dy -= 1
+                if keys[pygame.K_d]: dy += 1
 
-            game.move_monsters()
-            game.monster_attack_hero()
-            game.update_projectiles(view.cell_size)
+                game.move_monsters()
+                game.monster_attack_hero()
+                game.update_projectiles(view.cell_size)
 
-            if dx != 0 or dy != 0:
-                current_time = pygame.time.get_ticks()
-                if current_time - hero_last_move_time >= hero_move_delay:
-                    game.move_hero(dx, dy)
-                    hero_last_move_time = current_time
+                if dx != 0 or dy != 0:
+                    current_time = pygame.time.get_ticks()
+                    if current_time - hero_last_move_time >= hero_move_delay:
+                        game.move_hero(dx, dy)
+                        hero_last_move_time = current_time
 
             if game.in_room:
                 view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
@@ -158,8 +198,6 @@ def main():
                 view.draw_maze(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack())
 
             now = pygame.time.get_ticks()
-
-
             if game.special_active and now - game.last_special_used > game.special_duration:
                 game.special_active = False
 
@@ -178,6 +216,7 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+
 
 
 if __name__ == "__main__":
