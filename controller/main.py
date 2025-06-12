@@ -1,13 +1,13 @@
 import pygame
 import math
 from controller.dungeon_adventure import DungeonAdventure
+from controller.save_load import save_game, load_game
 from view.game_view import GameView
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.OOPillars import OOPillars
 from model.room import Room
-
 
 def main():
     pygame.init()
@@ -30,7 +30,7 @@ def main():
     state = "main_menu"
     pause_state = False
     resume_countdown = 0
-    prev_menu_state = None  # <--- Added
+    prev_menu_state = None
     game = None
     hero_screen_x = 0
     hero_screen_y = 0
@@ -65,7 +65,13 @@ def main():
                         if button.text == "PLAY":
                             state = "difficulty_menu"
                         elif button.text == "LOAD":
-                            print("NOT IMPLEMENTED YET")
+                            loaded_game = load_game()
+                            if loaded_game:
+                                game = loaded_game
+                                state = "playing"
+                                view.display_message("✅ Game Loaded!", 2000)
+                            else:
+                                view.display_message("⚠️ No save found or failed to load!", 2000)
                         elif button.text == "ABOUT":
                             prev_menu_state = "main_menu"
                             state = "about_screen"
@@ -106,7 +112,7 @@ def main():
                             if game.in_room:
                                 special_message = game.perform_special_attack()
                                 view.display_message(special_message)
-                        elif event.key == pygame.K_h:  # 'H' to use healing potion
+                        elif event.key == pygame.K_h:
                             if game.get_backpack().get_healing_cntr() > 0:
                                 game.get_backpack().use_healing_potion()
                                 game.get_hero().health_points = min(
@@ -114,7 +120,7 @@ def main():
                                     game.get_hero()._max_health_points
                                 )
                                 view.display_message("Used Health Potion (+20 HP)", 2000)
-                        elif event.key == pygame.K_v:  # Press V to use Vision Potion
+                        elif event.key == pygame.K_v:
                             if game.get_backpack().use_vision_potion():
                                 game.vision_reveal_start = pygame.time.get_ticks()
                                 view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
@@ -140,10 +146,14 @@ def main():
                 for button in view.pause_buttons:
                     if button.is_clicked(event):
                         if button.text == "RESUME":
-                            resume_countdown = 180  # 3 sec @ 60 fps
+                            resume_countdown = 180
                             state = "countdown"
                         elif button.text == "SAVE":
-                            print("SAVE not implemented yet.")
+                            try:
+                                save_game(game)
+                                view.display_message("✅ Game Saved Successfully!", 2000)
+                            except Exception:
+                                view.display_message("❌ Failed to Save Game!", 2000)
                         elif button.text == "ABOUT":
                             prev_menu_state = "pause_menu"
                             state = "about_screen"
@@ -217,8 +227,5 @@ def main():
 
     pygame.quit()
 
-
-
 if __name__ == "__main__":
     main()
-
