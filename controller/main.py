@@ -35,7 +35,7 @@ def main():
 
     while running:
         screen.fill((0, 0, 0))
-        if state in ["main_menu", "difficulty_menu"]:
+        if state in ["main_menu", "difficulty_menu", "about_screen"]:
             pygame.mouse.set_visible(True)
         else:
             pygame.mouse.set_visible(False)
@@ -63,7 +63,7 @@ def main():
                         elif button.text == "LOAD":
                             print("NOT IMPLEMENTED YET")
                         elif button.text == "ABOUT":
-                            print("Dungeon Adventures VERSION 1.0")
+                            state = "about_screen"
                         elif button.text == "QUIT":
                             running = False
 
@@ -75,7 +75,10 @@ def main():
                         game = DungeonAdventure()
                         print(f"Started game on {difficulty.upper()}")
                         state = "playing"
-
+            elif state == "about_screen":
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        state = "main_menu"
             elif state == "playing":
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
@@ -112,6 +115,8 @@ def main():
             view.draw_buttons(view.menu_buttons)
         elif state == "difficulty_menu":
             view.draw_buttons(view.difficulty_buttons)
+        elif state == "about_screen":
+            view.draw_about_screen()
         elif state == "playing":
             keys = pygame.key.get_pressed()
             dx, dy = 0, 0

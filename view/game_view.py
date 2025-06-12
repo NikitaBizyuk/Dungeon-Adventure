@@ -1,4 +1,5 @@
 import pygame
+import os
 import math
 from view.menu_button import Button
 class GameView:
@@ -16,6 +17,9 @@ class GameView:
         self.message = ""
         self.message_start_time = 0
         self.message_duration = 0
+        image_path = os.path.join(os.path.dirname(__file__), "..", "assets", "DungeonBackground.png")
+        self.menu_bg = pygame.image.load(image_path).convert()
+        self.menu_bg = pygame.transform.scale(self.menu_bg, self.screen.get_size())
 
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -35,6 +39,7 @@ class GameView:
         ]
 
     def draw_buttons(self, buttons):
+        self.screen.blit(self.menu_bg, (0, 0))
         for button in buttons:
             button.draw(self.screen)
 
@@ -306,3 +311,44 @@ class GameView:
             item_text = font.render(f"- {item}: {count}", True, (255, 255, 255))
             self.screen.blit(item_text, (inv_rect.x + 20, inv_rect.y + 40 + idx * 25))
 
+    def draw_about_screen(self):
+        self.screen.fill((0, 0, 0))  # Clear the screen
+        lines = [
+            "Dungeon Adventure Game",
+            "Version: 1.0 June 11th 2025",
+            "Authors: Rudolf Arakelyan, Nikita Bizyuk",
+            "         Collins Mbugua, Ian Fuhr",
+            "",
+            "OBJECTIVE:",
+            "Find all 4 Pillars of OOP:",
+            "- Abstraction (A)",
+            "- Encapsulation (E)",
+            "- Inheritance (I)",
+            "- Polymorphism (P)",
+            "",
+            "Enter a room fight and defeat monsters.",
+            "Use potions to survive.",
+            "Reach the exit with all 4 pillars to win!",
+            "",
+            "Press ESC to return to the main menu."
+        ]
+
+        font = pygame.font.SysFont('georgia', 36, bold = True)
+        y_offset = 80
+        bright_brown = (210, 140, 70)
+
+        # ─── Add a background box ───
+        box_width = self.screen.get_width() - 200
+        box_height = len(lines) * 45 + 40
+        box_x = 100
+        box_y = y_offset - 30
+
+        # Draw background box and border
+        pygame.draw.rect(self.screen, (30, 30, 30), (box_x, box_y, box_width, box_height))  # dark gray bg
+        pygame.draw.rect(self.screen, bright_brown, (box_x, box_y, box_width, box_height), 4)  # brown border
+
+        for line in lines:
+            text = font.render(line, True, bright_brown)
+            text_rect = text.get_rect(center=(self.screen.get_width() // 2, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += 45
