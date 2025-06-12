@@ -13,6 +13,9 @@ class GameView:
         self.menu_buttons = self.create_menu_buttons()
         self.difficulty_buttons = self.create_difficulty_buttons()
         self.show_inventory = False
+        self.message = ""
+        self.message_start_time = 0
+        self.message_duration = 0
 
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -34,6 +37,51 @@ class GameView:
     def draw_buttons(self, buttons):
         for button in buttons:
             button.draw(self.screen)
+
+    def display_message(self, message, duration=2000):
+        self.message = message
+        self.message_start = pygame.time.get_ticks()
+        self.message_duration = duration
+
+    def draw_message(self):
+        if self.message and pygame.time.get_ticks() - self.message_start_time < self.message_duration:
+            font = pygame.font.Font(None, 36)
+            rendered = font.render(self.message, True, (255, 255, 0))
+            self.screen.blit(rendered, (30, 60))  # adjust position as needed
+        else:
+            self.message = ""
+
+    def draw_special_status(self, game, x=20, y=20):
+        now = pygame.time.get_ticks()
+        font = pygame.font.Font(None, 32)
+
+        if game.special_active and now - game.last_special_used < game.special_duration:
+            remaining = (game.special_duration - (now - game.last_special_used)) / 1000
+            msg = f"Special: Active ({remaining:.1f}s)"
+            color = (0, 255, 0)
+        elif now - game.last_special_used < game.special_cooldown:
+            remaining = (game.special_cooldown - (now - game.last_special_used)) / 1000
+            msg = f"Special: Cooling down ({remaining:.1f}s)"
+            color = (255, 0, 0)
+        else:
+            msg = "Special: Ready"
+            color = (255, 255, 255)
+
+        text = font.render(msg, True, color)
+        background = pygame.Surface((text.get_width() + 20, text.get_height() + 10))
+        background.set_alpha(150)  # optional transparency
+        background.fill((0, 0, 0))
+        self.screen.blit(background, (x, y))
+        self.screen.blit(text, (x + 10, y + 5))
+
+    def draw_status_bar(self, screen, status_text):
+        font = pygame.font.SysFont("Arial", 28)
+        text_surface = font.render(status_text, True, (255, 255, 255))
+        background_rect = pygame.Rect(10, 10, text_surface.get_width() + 20, text_surface.get_height() + 10)
+
+        pygame.draw.rect(screen, (0, 0, 0), background_rect)  # black background
+        pygame.draw.rect(screen, (255, 255, 255), background_rect, 2)  # white border
+        screen.blit(text_surface, (background_rect.x + 10, background_rect.y + 5))
 
     def draw_maze(self, game,width, height,hero,backpack):
         dungeon = game.dungeon
@@ -100,6 +148,10 @@ class GameView:
             self.health_bar(width, height, hero)
             if self.show_inventory:
                 self.draw_inventory(backpack)
+
+            self.draw_message()
+
+
     def draw_room(self, game, width, height,hero,backpack,ogre,skeleton,gremlin,
                   pillar_1,pillar_2,pillar_3,pillar_4):
         room = game.active_room
@@ -204,6 +256,10 @@ class GameView:
         self.health_bar(width,height,hero)
         if self.show_inventory:
             self.draw_inventory(backpack)
+
+        self.draw_message()
+
+
     def health_bar(self,width,height,hero):
         max_bar_width = width - 800
         bar_height = 20
@@ -225,6 +281,7 @@ class GameView:
         hp_text = font.render(f"HP: {hp}/{max_hp}", True, (255, 255, 255))
         text_rect = hp_text.get_rect(center=(bar_x + max_bar_width // 2, bar_y + bar_height // 2))
         self.screen.blit(hp_text, text_rect)
+
     def show_melee_attack(self):
         self.last_attack_time = pygame.time.get_ticks()
 

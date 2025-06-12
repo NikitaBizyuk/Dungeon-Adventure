@@ -39,6 +39,7 @@ def main():
             pygame.mouse.set_visible(True)
         else:
             pygame.mouse.set_visible(False)
+
         if game and state == "playing":
             if game.in_room:
                 hero_r, hero_c = game.active_room.get_hero_position()
@@ -85,6 +86,10 @@ def main():
                         game.exit_room()
                     elif event.key == pygame.K_e:
                         game.perform_ranged_attack(CELL_SIZE)
+                    elif event.key == pygame.K_SPACE:
+                        if game.in_room:
+                            special_message = game.perform_special_attack()
+                            view.display_message(special_message)
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -98,7 +103,6 @@ def main():
                     dx = mouse_x - hero_screen_x
                     dy = mouse_y - hero_screen_y
                     length = math.hypot(dx, dy)
-
                     if length != 0:
                         raw_vector = pygame.math.Vector2(dx / length, dy / length)
                         smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
@@ -127,11 +131,28 @@ def main():
                     hero_last_move_time = current_time
 
             if game.in_room:
-                view.draw_room(game, WIDTH, HEIGHT,game.get_hero(),game.get_backpack(), Ogre, Skeleton, Gremlin, OOPillars.ENCAPSULATION.symbol,
-                               OOPillars.POLYMORPHISM.symbol, OOPillars.INHERITANCE.symbol,
-                               OOPillars.ABSTRACTION.symbol)
+                view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
+                               OOPillars.ENCAPSULATION.symbol, OOPillars.POLYMORPHISM.symbol,
+                               OOPillars.INHERITANCE.symbol, OOPillars.ABSTRACTION.symbol)
             else:
-                view.draw_maze(game,WIDTH,HEIGHT,game.get_hero(),game.get_backpack())
+                view.draw_maze(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack())
+
+            now = pygame.time.get_ticks()
+
+
+            if game.special_active and now - game.last_special_used > game.special_duration:
+                game.special_active = False
+
+            if game.special_active:
+                time_left = (game.special_duration - (now - game.last_special_used)) / 1000
+                status = f"Special: Active ({time_left:.1f}s)"
+            elif now - game.last_special_used < game.special_cooldown:
+                cd_left = (game.special_cooldown - (now - game.last_special_used)) / 1000
+                status = f"Special: Cooling Down ({cd_left:.1f}s)"
+            else:
+                status = "Special: Ready"
+
+            view.draw_status_bar(screen, status)
 
         pygame.display.flip()
         clock.tick(60)
@@ -141,3 +162,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
