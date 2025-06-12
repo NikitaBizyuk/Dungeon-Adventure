@@ -112,7 +112,9 @@ def main():
         elif state == "difficulty_menu":
             view.draw_buttons(view.difficulty_buttons)
         elif state == "about_screen":
+            view.draw_bg()
             view.draw_about_screen()
+
         elif state == "playing":
             keys = pygame.key.get_pressed()
             dx, dy = 0, 0

@@ -39,7 +39,8 @@ class GameView:
         self.screen.blit(self.menu_bg, (0, 0))
         for button in buttons:
             button.draw(self.screen)
-
+    def draw_bg(self):
+        self.screen.blit(self.menu_bg,(0,0))
     def draw_maze(self, game,width, height,hero,backpack):
         dungeon = game.dungeon
         hero_x = dungeon.hero_x
