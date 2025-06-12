@@ -15,7 +15,7 @@ import random
 class DungeonAdventure:
     def __init__(self):
         self.dungeon = Dungeon(difficulty=Room._current_difficulty)
-        self.hero = Warrior("Rudy")  # You can swap for Warrior("...") or Thief("...") here
+        self.hero = Warrior("Rudy")
         self.my_back_pack = BackPack()
         self.in_room = False
         self.active_room = None
@@ -24,11 +24,11 @@ class DungeonAdventure:
         self._projectiles = []
         self.last_projectile_time = 0
         self.special_active = False
-        self.special_cooldown = 8000  # 8 seconds cooldown
-        self.special_duration = 3000  # 3 seconds active
+        self.special_cooldown = 8000
+        self.special_duration = 3000
         self.last_special_used = -9999
         self.vision_reveal_start = None
-        self.vision_reveal_duration = 3000  # milliseconds
+        self.vision_reveal_duration = 3000
 
     def move_hero(self, dx, dy):
         if self.dungeon.in_room:
@@ -66,7 +66,10 @@ class DungeonAdventure:
             monster = self.active_room.get_monster_at(target_r, target_c)
             if monster:
                 print(f"🗡️ {self.hero.name} attacks {monster.name} at ({target_r}, {target_c})")
-                self.hero.attack(monster)
+                if self.special_active:
+                    self.hero.special_skill(monster)
+                else:
+                    self.hero.attack(monster)
                 monster.flash_hit()
                 print(f"🧟 {monster.name} HP after attack: {monster.health_points}")
                 if not monster.is_alive():
@@ -76,7 +79,7 @@ class DungeonAdventure:
     def perform_ranged_attack(self, cell_size):
         current_time = pygame.time.get_ticks()
         if current_time - self.last_projectile_time < self.hero.projectile_cooldown:
-            return  # Still cooling down
+            return
 
         dx, dy = self.aim_vector
 
@@ -102,8 +105,6 @@ class DungeonAdventure:
         if now - self.last_special_used < self.special_cooldown:
             return "Special cooling down..."
 
-        # Activate it
-        self.hero.special_skill(None)  # or pass monster/target if needed
         self.last_special_used = now
         self.special_active = True
         return "Special activated!"
