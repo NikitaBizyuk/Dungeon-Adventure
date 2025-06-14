@@ -40,6 +40,53 @@ class GameView:
         self.pause_buttons = self._create_pause_menu_buttons()
         self.edit_rect = None
 
+        wall_path = os.path.join(os.path.dirname(__file__), "..", "assets", "wall2.png")
+        self._wall_image = pygame.image.load(wall_path).convert()
+        self._wall_image = pygame.transform.scale(self._wall_image, (cell_size, cell_size))
+
+        floor_path = os.path.join(os.path.dirname(__file__), "..", "assets", "floor.png")
+        self._floor_image = pygame.image.load(floor_path).convert()
+        self._floor_image = pygame.transform.scale(self._floor_image, (cell_size, cell_size))
+
+        door_path = os.path.join(os.path.dirname(__file__), "..", "assets", "door.png")
+        self._door_image = pygame.image.load(door_path).convert_alpha()
+        self._door_image = pygame.transform.scale(self._door_image, (cell_size, cell_size))
+
+        pit_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pit.png")
+        self._pit_image = pygame.image.load(pit_path).convert_alpha()
+        self._pit_image = pygame.transform.scale(self._pit_image, (cell_size, cell_size))
+
+        # Load health potion image
+        hp_path = os.path.join(os.path.dirname(__file__), "..", "assets", "health_potion.png")
+        self._health_potion_image = pygame.image.load(hp_path).convert_alpha()
+        self._health_potion_image = pygame.transform.scale(self._health_potion_image, (cell_size, cell_size))
+
+        # Load vision potion image
+        vp_path = os.path.join(os.path.dirname(__file__), "..", "assets", "vision_potion.png")
+        self._vision_potion_image = pygame.image.load(vp_path).convert_alpha()
+        self._vision_potion_image = pygame.transform.scale(self._vision_potion_image, (cell_size, cell_size))
+
+        # Pillar crown images
+        pillar_a_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_a.png")
+        self._pillar_a_image = pygame.image.load(pillar_a_path).convert_alpha()
+        self._pillar_a_image = pygame.transform.scale(self._pillar_a_image, (cell_size, cell_size))
+
+        pillar_e_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_e.png")
+        self._pillar_e_image = pygame.image.load(pillar_e_path).convert_alpha()
+        self._pillar_e_image = pygame.transform.scale(self._pillar_e_image, (cell_size, cell_size))
+
+        pillar_i_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_i.png")
+        self._pillar_i_image = pygame.image.load(pillar_i_path).convert_alpha()
+        self._pillar_i_image = pygame.transform.scale(self._pillar_i_image, (cell_size, cell_size))
+
+        pillar_p_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_p.png")
+        self._pillar_p_image = pygame.image.load(pillar_p_path).convert_alpha()
+        self._pillar_p_image = pygame.transform.scale(self._pillar_p_image, (cell_size, cell_size))
+
+        exit_path = os.path.join(os.path.dirname(__file__), "..", "assets", "exit.png")
+        self._exit_image = pygame.image.load(exit_path).convert_alpha()
+        self._exit_image = pygame.transform.scale(self._exit_image, (cell_size, cell_size))
+
     # ───────────────────────── Button factories ──────────────────────
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -236,15 +283,24 @@ class GameView:
                     and now - game.vision_reveal_start < game.vision_reveal_duration
                 )
 
-                if not cell.explored:
-                    color = (0, 0, 0)
-                elif vision_active or cell.visible:
-                    color = base_colors.get(cell.cell_type, (255, 0, 255))
+                # Draw tile image
+                if cell.cell_type == "wall" and cell.explored:
+                    self.screen.blit(self._wall_image, rect.topleft)
+                elif cell.cell_type == "hallway" and (vision_active or cell.visible):
+                    self.screen.blit(self._floor_image, rect.topleft)
+                elif cell.cell_type == "door" and (vision_active or cell.visible):
+                    self.screen.blit(self._door_image, rect.topleft)
+                elif cell.cell_type == "exit" and (vision_active or cell.visible):
+                    self.screen.blit(self._exit_image, rect.topleft)
                 else:
-                    base = base_colors.get(cell.cell_type, (100, 100, 100))
-                    color = tuple(int(x * 0.35) for x in base)
+                    pygame.draw.rect(self.screen, (10, 10, 10), rect)  # unexplored = black
 
-                pygame.draw.rect(self.screen, color, rect)
+                # Apply darkness overlay if not visible
+                if not vision_active and not cell.visible:
+                    fog = pygame.Surface((self.cell_size, self.cell_size))
+                    fog.set_alpha(180)  # darkness level
+                    fog.fill((0, 0, 0))
+                    self.screen.blit(fog, rect.topleft)
 
         # Hero symbol
         hero_rect = pygame.Rect(
@@ -338,9 +394,30 @@ class GameView:
                 screen_y = offset_y + (r - start_r) * cell_size
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
                 color = base_colors.get(tile, (255, 0, 255))
-                if tile in {"A", "E", "I", "P"}:
-                    color = base_colors.get(tile, (255, 215, 0))
-                pygame.draw.rect(self.screen, color, rect)
+                if tile == "wall":
+                    self.screen.blit(self._wall_image, rect.topleft)
+                elif tile == "floor":
+                    self.screen.blit(self._floor_image, rect.topleft)
+                elif tile == "door":
+                    self.screen.blit(self._door_image, rect.topleft)
+                elif tile == "pit":
+                    self.screen.blit(self._pit_image, rect.topleft)
+                elif tile == "Health Potion":
+                    self.screen.blit(self._health_potion_image, rect.topleft)
+                elif tile == "Vision Potion":
+                    self.screen.blit(self._vision_potion_image, rect.topleft)
+                elif tile == "A":
+                    self.screen.blit(self._pillar_a_image, rect.topleft)
+                elif tile == "E":
+                    self.screen.blit(self._pillar_e_image, rect.topleft)
+                elif tile == "I":
+                    self.screen.blit(self._pillar_i_image, rect.topleft)
+                elif tile == "P":
+                    self.screen.blit(self._pillar_p_image, rect.topleft)
+                elif tile == "exit":
+                    self.screen.blit(self._exit_image, rect.topleft)
+                else:
+                    pygame.draw.rect(self.screen, color, rect)
 
         # Hero
         center_x = offset_x + (hero_c - start_c) * cell_size + cell_size // 2

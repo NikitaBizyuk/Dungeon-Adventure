@@ -73,7 +73,7 @@ class DungeonAdventure:
 
             return outcome
 
-        self._dungeon.move_hero(dx, dy, self._backpack, self._view)
+        self._dungeon.move_hero_in_room(dx, dy, self._backpack, self._view)
         cell = self._dungeon.maze[self._dungeon.hero_x][self._dungeon.hero_y]
 
         if cell.cell_type == "exit" and self._backpack.pillar_cntr == 4:

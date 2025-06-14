@@ -1,6 +1,5 @@
 import random
 from model.MonsterFactory import MonsterFactory
-from model.OOPillars import OOPillars
 
 
 class Room:
