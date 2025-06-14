@@ -1,7 +1,7 @@
 import random
 from abc import ABC, abstractmethod
 
-from model.dungeon_character import DungeonCharacter
+from model.DungeonCharacter import DungeonCharacter
 
 
 class Hero(DungeonCharacter, ABC):

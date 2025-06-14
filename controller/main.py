@@ -7,11 +7,11 @@ from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.OOPillars import OOPillars
-from model.room import Room
+from model.Room import Room
 
 # Hero classes for the selection step
 from model.Priestess import Priestess
-from model.warrior import Warrior
+from model.Warrior import Warrior
 from model.Thief import Thief
 
 

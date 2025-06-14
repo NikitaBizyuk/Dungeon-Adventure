@@ -1,6 +1,6 @@
 import random
-from model.room import Room
-from model.maze_cell import MazeCell
+from model.Room import Room
+from model.MazeCell import MazeCell
 
 class Dungeon:
     def __init__(self, difficulty="medium"):
