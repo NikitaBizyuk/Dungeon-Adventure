@@ -1,6 +1,6 @@
 import random
 import math
-from model.hero import Hero
+from model.Hero import Hero
 
 
 class Thief(Hero):

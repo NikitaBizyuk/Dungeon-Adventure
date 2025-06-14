@@ -1,6 +1,6 @@
 import random
 from abc import ABC
-from model.dungeon_character import DungeonCharacter
+from model.DungeonCharacter import DungeonCharacter
 import pygame
 
 class Monster(DungeonCharacter, ABC):

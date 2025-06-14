@@ -1,5 +1,5 @@
 import random
-from model.monster import Monster
+from model.Monster import Monster
 
 class Skeleton(Monster):
     def __init__(self, name, hp, attack_speed, chance_to_hit,

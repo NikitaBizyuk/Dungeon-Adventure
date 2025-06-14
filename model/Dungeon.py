@@ -1,8 +1,7 @@
 import random
-from model.room import Room
-from model.maze_cell import MazeCell
+from model.Room import Room
+from model.MazeCell import MazeCell
 from model.OOPillars import OOPillars
-
 class Dungeon:
     def __init__(self, difficulty="medium"):
         if difficulty == "easy":
@@ -180,6 +179,7 @@ class Dungeon:
                     self.update_visibility()
                     if target.cell_type == "door":
                         room = self.rooms[target.door_id]
+                        room.enter(self)
                         self.in_room = True
                         self.active_room = room
                         print(f"Entered room at door {target.door_id}")

@@ -1,19 +1,41 @@
 import random
 from abc import ABC, abstractmethod
-
-from model.dungeon_character import DungeonCharacter
+from model.DungeonCharacter import DungeonCharacter
 
 
 class Hero(DungeonCharacter, ABC):
-    def __init__(self, name, health_points, damage_min, damage_max, attack_speed, chance_to_hit):
-        super().__init__(name, health_points, damage_min, damage_max, attack_speed, chance_to_hit)
+    """
+    Abstract base class for all heroes.
+    Adds:
+        • instant_death()  – used when the hero falls into a pit
+    """
+
+    # ─── Construction ────────────────────────────────────────────
+    def __init__(
+        self,
+        name: str,
+        health_points: int,
+        damage_min: int,
+        damage_max: int,
+        attack_speed: int,
+        chance_to_hit: float
+    ):
+        super().__init__(
+            name,
+            health_points,
+            damage_min,
+            damage_max,
+            attack_speed,
+            chance_to_hit
+        )
+
         self._max_health_points = health_points
-        self._chance_to_block = 0.90
-        self._healing_potions = 0
-        self._vision_potions = 0
-        self._pillars_found = 0
+        self._chance_to_block   = 0.90
+        self._healing_potions   = 0
+        self._vision_potions    = 0
+        self._pillars_found     = 0
 
-
+    # ─── Abstract combat interface ───────────────────────────────
     @abstractmethod
     def attack(self, target):
         pass
@@ -41,6 +63,13 @@ class Hero(DungeonCharacter, ABC):
             self.health_points -= amount
             print(f"{self.name} took {amount} damage. HP: {self.health_points}")
 
+    # ─── NEW: Instant death (used by pits) ───────────────────────
+    def instant_death(self) -> None:
+        """Sets HP to zero immediately."""
+        self.health_points = 0
+        print(f"{self.name} fell into a pit and died!")
+
+    # ─── Projectile specs (abstract) ─────────────────────────────
     @property
     @abstractmethod
     def projectile_cooldown(self):

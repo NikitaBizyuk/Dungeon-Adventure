@@ -1,6 +1,6 @@
 import random
 
-from model.hero import Hero
+from model.Hero import Hero
 import math
 
 class Priestess(Hero):

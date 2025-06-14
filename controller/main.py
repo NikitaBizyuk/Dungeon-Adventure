@@ -7,7 +7,12 @@ from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.OOPillars import OOPillars
-from model.room import Room
+from model.Room import Room
+
+# Hero classes for the selection step
+from model.Priestess import Priestess
+from model.Warrior import Warrior
+from model.Thief import Thief
 
 def main():
     pygame.init()
@@ -34,10 +39,17 @@ def main():
     game = None
     hero_screen_x = 0
     hero_screen_y = 0
+    typed_name = ""
+    typing_name = True
+    name_max_length = 12
+    confirmed_name = False
+    dead_start = None
+
+    pending_difficulty: str | None = None
 
     while running:
         screen.fill((0, 0, 0))
-        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu"]:
+        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu", "hero_menu"]:
             pygame.mouse.set_visible(True)
             pygame.event.set_grab(False)
         else:
@@ -59,10 +71,29 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if state == "about_screen":
+                    state = prev_menu_state if prev_menu_state else "main_menu"
+                    prev_menu_state = None
+                    pause_state = False
+                elif state == "difficulty_menu":
+                    state = "main_menu"
+                elif state == "hero_menu":
+                    state = "difficulty_menu"
+                elif state == "pause_menu":
+                    state = "main_menu"
+                    pause_state = False
+                elif state == "playing":
+                    state = "pause_menu"
+                    pause_state = True
+
             elif state == "main_menu":
                 for button in view.menu_buttons:
                     if button.is_clicked(event):
                         if button.text == "PLAY":
+                            typed_name = ""
+                            typing_name = True
+                            confirmed_name = False
                             state = "difficulty_menu"
                         elif button.text == "LOAD":
                             loaded_game = load_game()
@@ -83,18 +114,47 @@ def main():
                     if button.is_clicked(event):
                         difficulty = button.text.lower()
                         Room.set_difficulty(difficulty)
-                        game = DungeonAdventure(view)
-                        print(f"Started game on {difficulty.upper()}")
-                        state = "playing"
+                        pending_difficulty = difficulty
+                        state = "hero_menu"
 
-            elif state == "about_screen":
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    if prev_menu_state == "pause_menu":
-                        state = "pause_menu"
-                    else:
-                        state = "main_menu"
-                        pause_state = False
-                    prev_menu_state = None
+            elif state == "hero_menu":
+                if event.type == pygame.KEYDOWN and typing_name:
+                    if event.key == pygame.K_RETURN and typed_name.strip():
+                        typing_name = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        typed_name = typed_name[:-1]
+                    elif len(typed_name) < name_max_length:
+                        typed_name += event.unicode
+
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if hasattr(view, "confirm_rect") and view.confirm_rect.collidepoint(event.pos):
+                        if typed_name.strip():
+                            confirmed_name = True
+                            typing_name = False
+                            view.display_message("✅ Name confirmed!", 1500)
+                        else:
+                            view.display_message("❌ Enter a valid name", 1500)
+
+
+                    elif hasattr(view, "edit_rect") and view.edit_rect and view.edit_rect.collidepoint(event.pos):
+                        typing_name = True
+                        confirmed_name = False
+                        view.display_message("✏️ Edit your name", 1500)
+
+                    elif confirmed_name:
+                        for button in view.hero_buttons:
+                            if button.is_clicked(event):
+                                choice = button.text.upper()
+                                hero_cls = {
+                                    "WARRIOR": Warrior,
+                                    "PRIESTESS": Priestess,
+                                    "THIEF": Thief,
+                                }[choice]
+
+                                hero_name = typed_name.strip()
+                                game = DungeonAdventure(view,hero_cls=hero_cls, hero_name=hero_name)
+                                print(f"Started {hero_name} the {choice} on {pending_difficulty.upper()}")
+                                state = "playing"
 
             elif state == "playing":
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -164,6 +224,9 @@ def main():
             view.draw_buttons(view.menu_buttons)
         elif state == "difficulty_menu":
             view.draw_buttons(view.difficulty_buttons)
+        elif state == "hero_menu":
+            view.draw_buttons(view.hero_buttons)
+            view.draw_name_input(screen, typed_name, typing_name, confirmed_name)
         elif state == "about_screen":
             view.draw_about_screen()
         elif state == "pause_menu":
@@ -201,6 +264,11 @@ def main():
                             continue
 
                         hero_last_move_time = current_time
+                if game.game_over:
+                    view.display_message("💀 Game Over: No lives left!", 3000)
+                    dead_start = pygame.time.get_ticks()
+                    state = "dead"
+                    continue
 
             if game.in_room:
                 view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
@@ -222,7 +290,27 @@ def main():
             else:
                 status = "Special: Ready"
 
+            status = f"Lives: {game.get_lives()}   |   {status}"
             view.draw_status_bar(screen, status)
+
+        elif state == "dead":
+            # draw Game-Over screen
+            font_big   = pygame.font.Font(None, 120)
+            font_small = pygame.font.Font(None,  50)
+
+            txt = font_big.render("GAME OVER", True, (220, 20, 20))
+            sub = font_small.render("Returning to main menu...", True, (255, 255, 255))
+
+            screen.blit(txt, txt.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40)))
+            screen.blit(sub, sub.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 40)))
+
+            # after 3 s, return to main menu
+            if dead_start and pygame.time.get_ticks() - dead_start > 3000:
+                state = "main_menu"
+                pause_state = False
+                game = None
+                dead_start = None
+                view.message = ""  # clear any lingering HUD message
 
         pygame.display.flip()
         clock.tick(60)
