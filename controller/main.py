@@ -1,18 +1,26 @@
 import pygame
 import math
-from controller.dungeon_adventure import DungeonAdventure
-from controller.save_load import save_game, load_game
-from view.game_view import GameView
-from model.Skeleton import Skeleton
-from model.Gremlin import Gremlin
-from model.Ogre import Ogre
-from model.OOPillars import OOPillars
-from model.room import Room
 
-# Hero classes for the selection step
+# ─── controller helpers ─────────────────────────────────────────
+from controller.dungeon_adventure import DungeonAdventure
+from controller.save_load       import save_game, load_game
+
+# ─── view ───────────────────────────────────────────────────────
+from view.game_view import GameView
+
+# ─── game data / models ─────────────────────────────────────────
+from model.room      import Room
+from model.OOPillars import OOPillars
+
+#  Monster classes (needed for draw_room)
+from model.Ogre      import Ogre
+from model.Skeleton  import Skeleton
+from model.Gremlin   import Gremlin
+
+#  Hero classes
+from model.warrior   import Warrior
 from model.Priestess import Priestess
-from model.warrior import Warrior
-from model.Thief import Thief
+from model.Thief     import Thief
 
 
 def main():
@@ -23,169 +31,161 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption("Dungeon Adventure")
 
-    FIXED_VIEW_ROWS = 15
-    CELL_SIZE = HEIGHT // FIXED_VIEW_ROWS
-    FIXED_VIEW_COLS = WIDTH // CELL_SIZE
+    FIXED_ROWS = 15
+    CELL       = HEIGHT // FIXED_ROWS
+    FIXED_COLS = WIDTH  // CELL
 
     clock = pygame.time.Clock()
-    view = GameView(screen, CELL_SIZE, view_rows=FIXED_VIEW_ROWS, view_cols=FIXED_VIEW_COLS)
+    view  = GameView(screen, CELL, FIXED_ROWS, FIXED_COLS)
 
-    hero_last_move_time = 0
-    hero_move_delay = 150
+    hero_move_delay = 150         # ms between moves
+    hero_last_move  = 0
+
+    # ─── high-level game state flags ────────────────────────────
+    state        = "main_menu"
+    pause_state  = False
+    resume_cnt   = 0
+    prev_menu    = None
+    game         = None
+    pending_diff = None           # difficulty selected, waiting for hero pick
+    dead_start   = None           # timestamp when Game-Over screen appears
+
     running = True
-    state = "main_menu"
-    pause_state = False
-    resume_countdown = 0
-    prev_menu_state = None
-    game = None
-    hero_screen_x = 0
-    hero_screen_y = 0
-
-    # Difficulty chosen, waiting for hero pick
-    pending_difficulty: str | None = None
-
-    # ──────────────────────────────────────────────────────────────
     while running:
         screen.fill((0, 0, 0))
-        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu"]:
+
+        # show/hide OS cursor
+        if state in {"main_menu", "difficulty_menu", "about_screen", "pause_menu"}:
             pygame.mouse.set_visible(True)
             pygame.event.set_grab(False)
         else:
             pygame.mouse.set_visible(False)
             pygame.event.set_grab(True)
 
+        # compute hero screen-space position for aim smoothing
         if game and state == "playing":
             if game.in_room:
-                hero_r, hero_c = game.active_room.get_hero_position()
+                hr, hc = game.active_room.get_hero_position()
             else:
-                hero_r, hero_c = game.dungeon.hero_x, game.dungeon.hero_y
+                hr, hc = game.dungeon.hero_x, game.dungeon.hero_y
+            sr = max(0, min(game.dungeon.rows - FIXED_ROWS, hr - FIXED_ROWS // 2))
+            sc = max(0, min(game.dungeon.cols - FIXED_COLS, hc - FIXED_COLS // 2))
+            hero_sx = (hc - sc) * CELL + CELL // 2
+            hero_sy = (hr - sr) * CELL + CELL // 2
 
-            start_r = max(0, min(game.dungeon.rows - FIXED_VIEW_ROWS, hero_r - FIXED_VIEW_ROWS // 2))
-            start_c = max(0, min(game.dungeon.cols - FIXED_VIEW_COLS, hero_c - FIXED_VIEW_COLS // 2))
-            hero_screen_x = (hero_c - start_c) * CELL_SIZE + CELL_SIZE // 2
-            hero_screen_y = (hero_r - start_r) * CELL_SIZE + CELL_SIZE // 2
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        # ─────────────────── EVENT HANDLING ──────────────────────
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
                 running = False
 
+            # ------------- MAIN MENU -------------
             elif state == "main_menu":
-                for button in view.menu_buttons:
-                    if button.is_clicked(event):
-                        if button.text == "PLAY":
+                for b in view.menu_buttons:
+                    if b.is_clicked(ev):
+                        if b.text == "PLAY":
                             state = "difficulty_menu"
-                        elif button.text == "LOAD":
-                            loaded_game = load_game()
-                            if loaded_game:
-                                game = loaded_game
+                        elif b.text == "LOAD":
+                            g = load_game()
+                            if g:
+                                game = g
                                 state = "playing"
                                 view.display_message("✅ Game Loaded!", 2000)
                             else:
-                                view.display_message("⚠️ No save found or failed to load!", 2000)
-                        elif button.text == "ABOUT":
-                            prev_menu_state = "main_menu"
+                                view.display_message("⚠️ No save found!", 2000)
+                        elif b.text == "ABOUT":
+                            prev_menu = "main_menu"
                             state = "about_screen"
-                        elif button.text == "QUIT":
+                        elif b.text == "QUIT":
                             running = False
 
+            # ------------- DIFFICULTY MENU -------------
             elif state == "difficulty_menu":
-                for button in view.difficulty_buttons:
-                    if button.is_clicked(event):
-                        difficulty = button.text.lower()
-                        Room.set_difficulty(difficulty)
-                        pending_difficulty = difficulty
+                for b in view.difficulty_buttons:
+                    if b.is_clicked(ev):
+                        Room.set_difficulty(b.text.lower())
+                        pending_diff = b.text.lower()
                         state = "hero_menu"
 
-            # Hero Menu --------------------------------------------------
+            # ------------- HERO MENU -------------
             elif state == "hero_menu":
-                for button in view.hero_buttons:
-                    if button.is_clicked(event):
-                        choice = button.text.upper()
-                        hero_cls = {
-                            "WARRIOR": Warrior,
-                            "PRIESTESS": Priestess,
-                            "THIEF": Thief,
-                        }[choice]
-
-                        game = DungeonAdventure(hero_cls=hero_cls, hero_name="Rudy")
-                        print(f"Started {choice} on {pending_difficulty.upper()}")
+                for b in view.hero_buttons:
+                    if b.is_clicked(ev):
+                        cls = {"WARRIOR": Warrior,
+                               "PRIESTESS": Priestess,
+                               "THIEF":     Thief}[b.text]
+                        game = DungeonAdventure(cls, "Rudy")
                         state = "playing"
 
+            # ------------- ABOUT SCREEN -------------
             elif state == "about_screen":
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    if prev_menu_state == "pause_menu":
-                        state = "pause_menu"
-                    else:
-                        state = "main_menu"
-                        pause_state = False
-                    prev_menu_state = None
+                if ev.type == pygame.KEYDOWN and ev.key == pygame.K_ESCAPE:
+                    state = prev_menu or "main_menu"
+                    pause_state = (state == "pause_menu")
+                    prev_menu = None
 
+            # ------------- PLAYING -------------
             elif state == "playing":
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if ev.type == pygame.KEYDOWN and ev.key == pygame.K_ESCAPE:
                     state = "pause_menu"
                     pause_state = True
+
                 elif not pause_state:
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_TAB:
+                    if ev.type == pygame.KEYDOWN:
+                        if ev.key == pygame.K_TAB:
                             view.show_inventory = not view.show_inventory
-                        elif game.in_room and event.key == pygame.K_q:
-                            game.exit_room()
-                        elif event.key == pygame.K_e:
-                            game.perform_ranged_attack(CELL_SIZE)
-                        elif event.key == pygame.K_SPACE:
-                            if game.in_room:
-                                special_message = game.perform_special_attack()
-                                view.display_message(special_message)
-                        elif event.key == pygame.K_h:
-                            if game.get_backpack().get_healing_cntr() > 0:
-                                game.get_backpack().use_healing_potion()
-                                game.get_hero().health_points = min(
-                                    game.get_hero().health_points + 20,
-                                    game.get_hero()._max_health_points
-                                )
-                                view.display_message("Used Health Potion (+20 HP)", 2000)
-                        elif event.key == pygame.K_v:
-                            if game.get_backpack().use_vision_potion():
-                                game.vision_reveal_start = pygame.time.get_ticks()
-                                view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        if event.button == 1:
+                        elif game.in_room and ev.key == pygame.K_q:
+                            game._leave_room()
+                        elif ev.key == pygame.K_e:
+                            game.perform_ranged_attack(CELL)
+                        elif ev.key == pygame.K_SPACE and game.in_room:
+                            view.display_message(game.perform_special_attack())
+                        elif ev.key == pygame.K_h and game.get_backpack().get_healing_cntr() > 0:
+                            bp = game.get_backpack()
+                            bp.use_healing_potion()
+                            hero = game.get_hero()
+                            hero.health_points = min(
+                                hero.health_points + 20, hero._max_health_points)
+                            view.display_message("Healing Potion +20", 2000)
+                        elif ev.key == pygame.K_v and game.get_backpack().use_vision_potion():
+                            game.vision_reveal_start = pygame.time.get_ticks()
+                            view.display_message("Vision Potion!", 2000)
+
+                    if ev.type == pygame.MOUSEBUTTONDOWN:
+                        if ev.button == 1:
                             game.perform_melee_attack()
                             view.show_melee_attack()
-                        elif event.button == 3:
-                            game.perform_ranged_attack(CELL_SIZE)
-                    elif event.type == pygame.MOUSEMOTION:
-                        mouse_x, mouse_y = pygame.mouse.get_pos()
-                        dx = mouse_x - hero_screen_x
-                        dy = mouse_y - hero_screen_y
-                        length = math.hypot(dx, dy)
-                        if length != 0:
-                            raw_vector = pygame.math.Vector2(dx / length, dy / length)
-                            smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
-                            game.aim_vector = (smoothed.x, smoothed.y)
-                    elif game.get_backpack().found_all_pillars():
-                        view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!", 3000)
+                        elif ev.button == 3:
+                            game.perform_ranged_attack(CELL)
 
+                    if ev.type == pygame.MOUSEMOTION:
+                        mx, my = pygame.mouse.get_pos()
+                        dx, dy = mx - hero_sx, my - hero_sy
+                        if dx or dy:
+                            vec = pygame.math.Vector2(dx, dy).normalize()
+                            game.aim_vector = pygame.math.Vector2(game.aim_vector).lerp(vec, 0.1)
+
+            # ------------- PAUSE MENU -------------
             elif state == "pause_menu":
-                for button in view.pause_buttons:
-                    if button.is_clicked(event):
-                        if button.text == "RESUME":
-                            resume_countdown = 180
+                for b in view.pause_buttons:
+                    if b.is_clicked(ev):
+                        if b.text == "RESUME":
+                            resume_cnt = 180   # 3-second countdown at 60 FPS
                             state = "countdown"
-                        elif button.text == "SAVE":
+                        elif b.text == "SAVE":
                             try:
                                 save_game(game)
-                                view.display_message("✅ Game Saved Successfully!", 2000)
+                                view.display_message("✅ Game Saved", 2000)
                             except Exception:
-                                view.display_message("❌ Failed to Save Game!", 2000)
-                        elif button.text == "ABOUT":
-                            prev_menu_state = "pause_menu"
+                                view.display_message("❌ Save Failed", 2000)
+                        elif b.text == "ABOUT":
+                            prev_menu = "pause_menu"
                             state = "about_screen"
-                        elif button.text == "BACK":
+                        elif b.text == "BACK":
                             game = None
                             state = "main_menu"
                             pause_state = False
 
+        # ───────────────────── RENDERING ──────────────────────────
         if state == "main_menu":
             view.draw_buttons(view.menu_buttons)
 
@@ -203,55 +203,84 @@ def main():
 
         elif state == "countdown":
             pause_state = True
-            seconds = resume_countdown // 60 + 1
-            font = pygame.font.Font(None, 200)
-            text = font.render(str(seconds), True, (255, 255, 255))
-            rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            screen.blit(text, rect)
-            resume_countdown -= 1
-            if resume_countdown <= 0:
+            view.draw_buttons(view.pause_buttons)
+            sec = resume_cnt // 60 + 1
+            txt = pygame.font.Font(None, 200).render(str(sec), True, (255, 255, 255))
+            screen.blit(txt, txt.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+            resume_cnt -= 1
+            if resume_cnt <= 0:
                 state = "playing"
                 pause_state = False
+
         elif state == "playing":
             if not pause_state:
                 keys = pygame.key.get_pressed()
-                dx, dy = 0, 0
-                if keys[pygame.K_w]: dx -= 1
-                if keys[pygame.K_s]: dx += 1
-                if keys[pygame.K_a]: dy -= 1
-                if keys[pygame.K_d]: dy += 1
+                dx = keys[pygame.K_s] - keys[pygame.K_w]
+                dy = keys[pygame.K_d] - keys[pygame.K_a]
 
                 game.move_monsters()
                 game.monster_attack_hero()
-                game.update_projectiles(view.cell_size)
+                game.update_projectiles(CELL)
 
-                if dx != 0 or dy != 0:
-                    current_time = pygame.time.get_ticks()
-                    if current_time - hero_last_move_time >= hero_move_delay:
+                if dx or dy:
+                    now = pygame.time.get_ticks()
+                    if now - hero_last_move >= hero_move_delay:
                         game.move_hero(dx, dy)
-                        hero_last_move_time = current_time
+                        hero_last_move = now
+
+                # if out of lives → go to dead screen
+                if game.game_over:
+                    view.display_message("💀 Game Over: No lives left!", 3000)
+                    dead_start = pygame.time.get_ticks()
+                    state = "dead"
+                    continue
 
             if game.in_room:
-                view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
-                               OOPillars.ENCAPSULATION.symbol, OOPillars.POLYMORPHISM.symbol,
-                               OOPillars.INHERITANCE.symbol, OOPillars.ABSTRACTION.symbol)
+                view.draw_room(
+                    game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(),
+                    Ogre, Skeleton, Gremlin,
+                    OOPillars.ENCAPSULATION.symbol, OOPillars.POLYMORPHISM.symbol,
+                    OOPillars.INHERITANCE.symbol,  OOPillars.ABSTRACTION.symbol
+                )
             else:
-                view.draw_maze(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack())
+                view.draw_maze(game, WIDTH, HEIGHT,
+                               game.get_hero(), game.get_backpack())
 
+            # special ability status
             now = pygame.time.get_ticks()
             if game.special_active and now - game.last_special_used > game.special_duration:
                 game.special_active = False
 
             if game.special_active:
-                time_left = (game.special_duration - (now - game.last_special_used)) / 1000
-                status = f"Special: Active ({time_left:.1f}s)"
+                left = (game.special_duration - (now - game.last_special_used)) / 1000
+                status = f"Special: Active ({left:.1f}s)"
             elif now - game.last_special_used < game.special_cooldown:
-                cd_left = (game.special_cooldown - (now - game.last_special_used)) / 1000
-                status = f"Special: Cooling Down ({cd_left:.1f}s)"
+                cd = (game.special_cooldown - (now - game.last_special_used)) / 1000
+                status = f"Special: Cooldown ({cd:.1f}s)"
             else:
                 status = "Special: Ready"
 
+            status = f"Lives: {game.get_lives()}   |   {status}"
             view.draw_status_bar(screen, status)
+
+        elif state == "dead":
+            # draw Game-Over screen
+            font_big   = pygame.font.Font(None, 120)
+            font_small = pygame.font.Font(None,  50)
+
+            txt = font_big.render("GAME OVER", True, (220, 20, 20))
+            sub = font_small.render("Returning to main menu...", True, (255, 255, 255))
+
+            screen.blit(txt, txt.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40)))
+            screen.blit(sub, sub.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 40)))
+
+            # after 3 s, return to main menu
+            if dead_start and pygame.time.get_ticks() - dead_start > 3000:
+                state = "main_menu"
+                pause_state = False
+                game = None
+                dead_start = None
+                view.message = ""  # clear any lingering HUD message
 
         pygame.display.flip()
         clock.tick(60)
@@ -259,7 +288,5 @@ def main():
     pygame.quit()
 
 
-
 if __name__ == "__main__":
     main()
-
