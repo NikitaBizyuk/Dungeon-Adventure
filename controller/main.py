@@ -164,8 +164,6 @@ def main():
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_TAB:
                             view.show_inventory = not view.show_inventory
-                        elif game.in_room and event.key == pygame.K_q:
-                            game.exit_room()
                         elif event.key == pygame.K_e:
                             game.perform_ranged_attack(CELL_SIZE)
                         elif event.key == pygame.K_SPACE:

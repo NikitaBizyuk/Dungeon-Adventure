@@ -128,6 +128,36 @@ class Room:
                 print("my back pack has",back_pack.to_string())
         return None
 
+    def enter(self, hero):
+        """Place hero at door and move monsters away from spawn point."""
+        self.hero_r = self.door_r - 1
+        self.hero_c = self.door_c
+
+        spawn_area = {
+            (self.hero_r + dx, self.hero_c + dy)
+            for dx in range(-2, 3)
+            for dy in range(-2, 3)
+            if 0 <= self.hero_r + dx < self.height and 0 <= self.hero_c + dy < self.width
+        }
+
+        safe_positions = [
+            (r, c)
+            for r in range(1, self.height - 1)
+            for c in range(1, self.width - 1)
+            if self.grid[r][c] in {"floor", "door"} and (r, c) not in spawn_area
+        ]
+        random.shuffle(safe_positions)
+
+        new_monsters = {}
+        for monster in self.monsters:
+            current_pos = self.monsters[monster]
+            if current_pos in spawn_area and safe_positions:
+                new_monsters[monster] = safe_positions.pop()
+            else:
+                new_monsters[monster] = current_pos
+
+        self.monsters = new_monsters
+
     # ───── Accessors ─────
     def get_tile(self, r, c):
         return self.grid[r][c]

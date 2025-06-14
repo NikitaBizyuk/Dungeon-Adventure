@@ -45,11 +45,12 @@ class DungeonAdventure:
         self.view = view
         self.hero_r = ""
         self.hero_c = ""
-    def move_hero(self, dx, dy,view):
+
+    def move_hero(self, dx, dy, view):
         if self.dungeon.in_room:
             outcome = self.dungeon.active_room.move_hero_in_room(
-                dx, dy, self.my_back_pack
-            ,view)
+                dx, dy, self.my_back_pack, view
+            )
             if outcome == "pit":
                 self.hero.instant_death()
                 self._lose_life_and_respawn()
@@ -59,27 +60,30 @@ class DungeonAdventure:
                 return "exit"
             return outcome
 
-        # In maze
-            self.dungeon.move_hero(dx, dy)
-            cell = self.dungeon.maze[self.dungeon.hero_x][self.dungeon.hero_y]
-            print("cell:", cell.cell_type, "| pillars:", self.my_back_pack.pillar_cntr)
-            if cell.cell_type == "exit" and self.my_back_pack.pillar_cntr == 4:
-                self.view.display_message("🏆 You escaped the dungeon!\nAll 4 Pillars Found!", 4000)
+        # ✅ MAZE movement logic — only runs if not in room
+        self.dungeon.move_hero(dx, dy)
+        cell = self.dungeon.maze[self.dungeon.hero_x][self.dungeon.hero_y]
+        print("cell:", cell.cell_type, "| pillars:", self.my_back_pack.pillar_cntr)
 
-                # Force redraw cycle before quitting
-                frames_to_show = 60  # show message for 1 second (60 frames at 60 FPS)
-                for _ in range(frames_to_show):
-                    self.view.draw_maze(self, pygame.display.get_surface().get_width(),
-                                        pygame.display.get_surface().get_height(), self.get_hero(), self.get_backpack())
-                    pygame.display.flip()
-                    pygame.time.delay(16)  # ~60 FPS
+        if cell.cell_type == "exit" and self.my_back_pack.pillar_cntr == 4:
+            self.view.display_message("🏆 You escaped the dungeon!\nAll 4 Pillars Found!", 4000)
 
-                return "win"
+            # Force redraw cycle before quitting
+            frames_to_show = 60  # show message for 1 second (60 frames at 60 FPS)
+            for _ in range(frames_to_show):
+                self.view.draw_maze(self, pygame.display.get_surface().get_width(),
+                                    pygame.display.get_surface().get_height(), self.get_hero(), self.get_backpack())
+                pygame.display.flip()
+                pygame.time.delay(16)  # ~60 FPS
+
+            return "win"
+
         if self.dungeon.in_room:
             self.in_room = True
             self.active_room = self.dungeon.active_room
             self.active_room.enter(self)
             return "room_enter"
+
         return None
 
     # ─────────────────── life / respawn logic ─────────────────────
