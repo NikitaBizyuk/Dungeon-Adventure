@@ -208,7 +208,6 @@ class Room:
     # ───── Accessors ─────
     def get_tile(self, r, c):
         return self.grid[r][c]
-
     def get_hero_position(self):
         return self.hero_r, self.hero_c
 

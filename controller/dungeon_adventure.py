@@ -1,17 +1,9 @@
 import pygame
-import random
-import math
-
-from model.dungeon import Dungeon
-from model.Priestess import Priestess
-from model.warrior import Warrior
-from model.Thief import Thief
-from model.Skeleton import Skeleton
-from model.Gremlin import Gremlin
-from model.Ogre import Ogre
-from model.room import Room
-from model.projectile import Projectile
-from model.backpack import BackPack
+from model.Dungeon import Dungeon
+from model.Warrior import Warrior
+from model.Room import Room
+from model.Projectile import Projectile
+from model.Backpack import BackPack
 
 
 class DungeonAdventure:

@@ -1,6 +1,6 @@
 import random
 from abc import ABC, abstractmethod
-from model.dungeon_character import DungeonCharacter
+from model.DungeonCharacter import DungeonCharacter
 
 
 class Hero(DungeonCharacter, ABC):
@@ -38,41 +38,30 @@ class Hero(DungeonCharacter, ABC):
     # ─── Abstract combat interface ───────────────────────────────
     @abstractmethod
     def attack(self, target):
-        """Regular attack; concrete subclasses implement."""
         pass
 
     @abstractmethod
     def special_skill(self, target):
-        """Special ability unique to each hero."""
         pass
 
-    # ─── Chance-to-block handling ────────────────────────────────
     @property
-    def chance_to_block(self) -> float:
+    def chance_to_block(self):
         return self._chance_to_block
 
     @chance_to_block.setter
-    def chance_to_block(self, value: float) -> None:
+    def chance_to_block(self, value):
         self._chance_to_block = max(0.0, min(1.0, value))
 
-    def reduce_block_chance_after_boss(self) -> None:
-        """Called each time a pillar is found to make later fights tougher."""
+    def reduce_block_chance_after_boss(self):
         self._chance_to_block = max(0.0, self._chance_to_block - 0.10)
-        print(
-            f"{self.name}'s block chance reduced to "
-            f"{round(self._chance_to_block * 100)}%."
-        )
+        print(f"{self.name}'s block chance reduced to {round(self._chance_to_block * 100)}%.")
 
-    # ─── Damage intake ───────────────────────────────────────────
-    def take_damage(self, amount: int) -> None:
+    def take_damage(self, amount):
         if random.random() < self._chance_to_block:
             print(f"{self.name} blocked the attack!")
         else:
             self.health_points -= amount
-            print(
-                f"{self.name} took {amount} damage. "
-                f"HP: {self.health_points}"
-            )
+            print(f"{self.name} took {amount} damage. HP: {self.health_points}")
 
     # ─── NEW: Instant death (used by pits) ───────────────────────
     def instant_death(self) -> None:
@@ -83,48 +72,30 @@ class Hero(DungeonCharacter, ABC):
     # ─── Projectile specs (abstract) ─────────────────────────────
     @property
     @abstractmethod
-    def projectile_cooldown(self) -> int:
-        """Milliseconds between projectile shots."""
-        raise NotImplementedError
+    def projectile_cooldown(self):
+        """Time in ms between shots."""
+        raise NotImplementedError("Each hero must define their projectile cooldown.")
 
     @property
     @abstractmethod
-    def projectile_speed(self) -> float:
-        """Pixels per frame for projectiles."""
-        raise NotImplementedError
+    def projectile_speed(self):
+        """Pixels per frame."""
+        raise NotImplementedError("Each hero must define their projectile speed.")
 
     @property
     @abstractmethod
-    def projectile_damage(self) -> int:
+    def projectile_damage(self):
         """Damage dealt per projectile."""
-        raise NotImplementedError
+        raise NotImplementedError("Each hero must define their projectile damage.")
 
-    # ─── Pillar tracking ─────────────────────────────────────────
     @property
-    def pillars_found(self) -> int:
+    def pillars_found(self):
         return self._pillars_found
 
     @pillars_found.setter
-    def pillars_found(self, value: int) -> None:
+    def pillars_found(self, value):
         self._pillars_found = value
 
-    def increment_pillars_found(self) -> None:
+    def increment_pillars_found(self):
         self._pillars_found += 1
         self.reduce_block_chance_after_boss()
-
-    # ─── Potion inventory helpers (optional) ─────────────────────
-    @property
-    def healing_potions(self) -> int:
-        return self._healing_potions
-
-    @healing_potions.setter
-    def healing_potions(self, value: int) -> None:
-        self._healing_potions = max(0, value)
-
-    @property
-    def vision_potions(self) -> int:
-        return self._vision_potions
-
-    @vision_potions.setter
-    def vision_potions(self, value: int) -> None:
-        self._vision_potions = max(0, value)
