@@ -36,6 +36,7 @@ class GameView:
         )
 
         self.pause_buttons = self.create_pause_menu_buttons()
+        self.edit_rect = None
 
     # ───────────────────────── Button factories ──────────────────────
     def create_menu_buttons(self):
@@ -74,87 +75,58 @@ class GameView:
     def create_difficulty_buttons(self):
         w, h = self.screen.get_size()
         return [
-            Button(
-                "EASY",
-                pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (0, 255, 0),
-            ),
-            Button(
-                "MEDIUM",
-                pygame.Rect(w // 2 - 100, h // 2, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 165, 0),
-            ),
-            Button(
-                "HARD",
-                pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 0, 0),
-            ),
+            Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
+            Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2, 200, 60), self.font, (200, 200, 200), (255, 165, 0)),
+            Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
         ]
 
     def create_hero_buttons(self):
         w, h = self.screen.get_size()
         return [
-            Button(
-                "WARRIOR",
-                pygame.Rect(w // 2 - 150, h // 2 - 120, 300, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-            Button(
-                "PRIESTESS",
-                pygame.Rect(w // 2 - 150, h // 2 - 40, 300, 60),
-                self.font,
-                (200, 200, 200),
-                (0, 255, 255),
-            ),
-            Button(
-                "THIEF",
-                pygame.Rect(w // 2 - 150, h // 2 + 40, 300, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 165, 0),
-            ),
+            Button("WARRIOR", pygame.Rect(w // 2 - 150, h // 2 - 120, 300, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("PRIESTESS", pygame.Rect(w // 2 - 150, h // 2 - 40, 300, 60), self.font, (200, 200, 200), (0, 255, 255)),
+            Button("THIEF", pygame.Rect(w // 2 - 150, h // 2 + 40, 300, 60), self.font, (200, 200, 200), (255, 165, 0)),
         ]
 
     def create_pause_menu_buttons(self):
         w, h = self.screen.get_size()
         return [
-            Button(
-                "RESUME",
-                pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (0, 255, 0),
-            ),
-            Button(
-                "SAVE",
-                pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-            Button(
-                "ABOUT",
-                pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (0, 128, 255),
-            ),
-            Button(
-                "BACK",
-                pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 0, 0),
-            ),
+            Button("RESUME", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
+            Button("SAVE", pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
+            Button("ABOUT", pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60), self.font, (200, 200, 200), (0, 128, 255)),
+            Button("BACK", pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
         ]
+
+    def draw_name_input(self, screen, typed_name, typing_name, confirmed_name):
+        font = pygame.font.Font(None, 48)
+        input_rect = pygame.Rect(screen.get_width() // 2 - 200, 150, 400, 60)
+
+        # Draw input box
+        pygame.draw.rect(screen, (255, 255, 255), input_rect, 2)
+
+        # Add blinking cursor
+        cursor = "|" if (pygame.time.get_ticks() // 500) % 2 == 0 and typing_name else ""
+        text_surface = font.render(typed_name + cursor, True, (255, 255, 255))
+        screen.blit(text_surface, (input_rect.x + 10, input_rect.y + 15))
+
+        # Confirm button
+        confirm_font = pygame.font.Font(None, 36)
+        confirm_text = confirm_font.render("Confirm", True, (0, 0, 0))
+        self.confirm_rect = pygame.Rect(input_rect.right + 20, input_rect.y, 140, 60)
+        confirm_color = (180, 255, 180) if confirmed_name else (200, 200, 200)
+        pygame.draw.rect(screen, confirm_color, self.confirm_rect)
+        pygame.draw.rect(screen, (255, 255, 255), self.confirm_rect, 2)
+        screen.blit(confirm_text, (self.confirm_rect.x + 20, self.confirm_rect.y + 15))
+
+        # Edit button (only if confirmed)
+        if confirmed_name:
+            edit_font = pygame.font.Font(None, 36)
+            edit_text = edit_font.render("✏️ Edit", True, (0, 0, 0))
+            self.edit_rect = pygame.Rect(input_rect.left - 160, input_rect.y, 140, 60)
+            pygame.draw.rect(screen, (255, 255, 200), self.edit_rect)
+            pygame.draw.rect(screen, (255, 255, 255), self.edit_rect, 2)
+            screen.blit(edit_text, (self.edit_rect.x + 10, self.edit_rect.y + 15))
+
 
     # ───────────────────────── Generic helpers ───────────────────────
     def draw_buttons(self, buttons):
@@ -429,11 +401,16 @@ class GameView:
             self.screen, (0, 0, 0), pygame.Rect(bar_x, bar_y, max_bar_width, bar_height), 2
         )
         font = pygame.font.Font(None, 30)
+
+        # Display: PlayerName (ClassName)
+        name_text = font.render(f"{hero.name} ({hero.__class__.__name__})", True, (255, 255, 255))
+        name_rect = name_text.get_rect(center=(bar_x + max_bar_width // 2, bar_y - 20))
+        self.screen.blit(name_text, name_rect)
+
+        # HP: current / max
         hp_text = font.render(f"HP: {hp}/{max_hp}", True, (255, 255, 255))
-        text_rect = hp_text.get_rect(
-            center=(bar_x + max_bar_width // 2, bar_y + bar_height // 2)
-        )
-        self.screen.blit(hp_text, text_rect)
+        hp_rect = hp_text.get_rect(center=(bar_x + max_bar_width // 2, bar_y + bar_height // 2))
+        self.screen.blit(hp_text, hp_rect)
 
     def show_melee_attack(self):
         self.last_attack_time = pygame.time.get_ticks()
@@ -466,40 +443,63 @@ class GameView:
 
     def draw_about_screen(self):
         self.screen.fill((0, 0, 0))
+
         lines = [
             "Dungeon Adventure Game",
-            "Version: 1.0 June 11th 2025",
+            "Version: 1.0 — June 11th, 2025",
             "Authors: Rudolf Arakelyan, Nikita Bizyuk",
             "         Collins Mbugua, Ian Fuhr",
             "",
             "OBJECTIVE:",
             "Find all 4 Pillars of OOP:",
-            "- Abstraction (A)",
-            "- Encapsulation (E)",
-            "- Inheritance (I)",
-            "- Polymorphism (P)",
+            " - Abstraction (A)",
+            " - Encapsulation (E)",
+            " - Inheritance (I)",
+            " - Polymorphism (P)",
             "",
-            "Enter a room, fight and defeat monsters.",
-            "Use potions to survive.",
-            "Reach the exit with all 4 pillars to win!",
+            "Enter rooms, defeat monsters, use potions,",
+            "and escape the dungeon with all 4 pillars!",
             "",
-            "Press ESC to return to the main menu.",
+            "CONTROLS:",
+            " - Move: W A S D",
+            " - Melee Attack: Left Click",
+            " - Ranged Attack: Right Click or E",
+            " - Special Ability: SPACE",
+            " - Exit Room: Q",
+            " - Health Potion: H",
+            " - Vision Potion: V",
+            " - Inventory: TAB",
+            " - Pause / Menu / Back: ESC",
+            "",
+            "Press ESC to return to the previous menu.",
         ]
 
-        font = pygame.font.SysFont("georgia", 36, bold=True)
-        y_offset = 80
+        screen_height = self.screen.get_height()
+        screen_width = self.screen.get_width()
+
+        # Dynamically calculate line height and font size to fit all lines
+        max_content_height = screen_height - 100  # margin from top/bottom
+        line_height = max_content_height // len(lines)
+        font_size = min(32, line_height - 4)  # cap at 32pt for readability
+
+        font = pygame.font.SysFont("georgia", font_size, bold=True)
         bright_brown = (210, 140, 70)
 
-        box_width = self.screen.get_width() - 200
-        box_height = len(lines) * 45 + 40
-        box_x = 100
-        box_y = y_offset - 30
+        # Box dimensions
+        padding = 20
+        box_width = screen_width - 160
+        box_height = len(lines) * line_height + padding
+        box_x = 80
+        box_y = (screen_height - box_height) // 2  # center vertically
 
         pygame.draw.rect(self.screen, (30, 30, 30), (box_x, box_y, box_width, box_height))
         pygame.draw.rect(self.screen, bright_brown, (box_x, box_y, box_width, box_height), 4)
 
+        # Draw text centered inside box
+        y_offset = box_y + padding // 2
         for line in lines:
             text = font.render(line, True, bright_brown)
-            text_rect = text.get_rect(center=(self.screen.get_width() // 2, y_offset))
+            text_rect = text.get_rect(center=(screen_width // 2, y_offset))
             self.screen.blit(text, text_rect)
-            y_offset += 45
+            y_offset += line_height
+

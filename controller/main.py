@@ -14,7 +14,6 @@ from model.Priestess import Priestess
 from model.warrior import Warrior
 from model.Thief import Thief
 
-
 def main():
     pygame.init()
 
@@ -40,14 +39,16 @@ def main():
     game = None
     hero_screen_x = 0
     hero_screen_y = 0
+    typed_name = ""
+    typing_name = True
+    name_max_length = 12
+    confirmed_name = False
 
-    # Difficulty chosen, waiting for hero pick
     pending_difficulty: str | None = None
 
-    # ──────────────────────────────────────────────────────────────
     while running:
         screen.fill((0, 0, 0))
-        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu"]:
+        if state in ["main_menu", "difficulty_menu", "about_screen", "pause_menu", "hero_menu"]:
             pygame.mouse.set_visible(True)
             pygame.event.set_grab(False)
         else:
@@ -69,10 +70,26 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if state == "about_screen":
+                    state = prev_menu_state if prev_menu_state else "main_menu"
+                    prev_menu_state = None
+                    pause_state = False
+                elif state == "difficulty_menu":
+                    state = "main_menu"
+                elif state == "hero_menu":
+                    state = "difficulty_menu"
+                elif state == "pause_menu":
+                    state = "main_menu"
+                    pause_state = False
+
             elif state == "main_menu":
                 for button in view.menu_buttons:
                     if button.is_clicked(event):
                         if button.text == "PLAY":
+                            typed_name = ""
+                            typing_name = True
+                            confirmed_name = False
                             state = "difficulty_menu"
                         elif button.text == "LOAD":
                             loaded_game = load_game()
@@ -96,29 +113,43 @@ def main():
                         pending_difficulty = difficulty
                         state = "hero_menu"
 
-            # Hero Menu --------------------------------------------------
             elif state == "hero_menu":
-                for button in view.hero_buttons:
-                    if button.is_clicked(event):
-                        choice = button.text.upper()
-                        hero_cls = {
-                            "WARRIOR": Warrior,
-                            "PRIESTESS": Priestess,
-                            "THIEF": Thief,
-                        }[choice]
+                if event.type == pygame.KEYDOWN and typing_name:
+                    if event.key == pygame.K_RETURN and typed_name.strip():
+                        typing_name = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        typed_name = typed_name[:-1]
+                    elif len(typed_name) < name_max_length:
+                        typed_name += event.unicode
 
-                        game = DungeonAdventure(hero_cls=hero_cls, hero_name="Rudy")
-                        print(f"Started {choice} on {pending_difficulty.upper()}")
-                        state = "playing"
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if hasattr(view, "confirm_rect") and view.confirm_rect.collidepoint(event.pos):
+                        if typed_name.strip():
+                            confirmed_name = True
+                            typing_name = False
+                            view.display_message("✅ Name confirmed!", 1500)
+                        else:
+                            view.display_message("❌ Enter a valid name", 1500)
 
-            elif state == "about_screen":
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    if prev_menu_state == "pause_menu":
-                        state = "pause_menu"
-                    else:
-                        state = "main_menu"
-                        pause_state = False
-                    prev_menu_state = None
+                    elif hasattr(view, "edit_rect") and view.edit_rect.collidepoint(event.pos):
+                        typing_name = True
+                        confirmed_name = False
+                        view.display_message("✏️ Edit your name", 1500)
+
+                    elif confirmed_name:
+                        for button in view.hero_buttons:
+                            if button.is_clicked(event):
+                                choice = button.text.upper()
+                                hero_cls = {
+                                    "WARRIOR": Warrior,
+                                    "PRIESTESS": Priestess,
+                                    "THIEF": Thief,
+                                }[choice]
+
+                                hero_name = typed_name.strip()
+                                game = DungeonAdventure(hero_cls=hero_cls, hero_name=hero_name)
+                                print(f"Started {hero_name} the {choice} on {pending_difficulty.upper()}")
+                                state = "playing"
 
             elif state == "playing":
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -188,19 +219,15 @@ def main():
 
         if state == "main_menu":
             view.draw_buttons(view.menu_buttons)
-
         elif state == "difficulty_menu":
             view.draw_buttons(view.difficulty_buttons)
-
         elif state == "hero_menu":
             view.draw_buttons(view.hero_buttons)
-
+            view.draw_name_input(screen, typed_name, typing_name, confirmed_name)
         elif state == "about_screen":
             view.draw_about_screen()
-
         elif state == "pause_menu":
             view.draw_buttons(view.pause_buttons)
-
         elif state == "countdown":
             pause_state = True
             seconds = resume_countdown // 60 + 1
@@ -258,8 +285,5 @@ def main():
 
     pygame.quit()
 
-
-
 if __name__ == "__main__":
     main()
-

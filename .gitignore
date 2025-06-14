@@ -126,3 +126,6 @@ export/
 # Ignore test screenshots or debug output
 test_outputs/
 debug_screens/
+
+
+*.pkl
