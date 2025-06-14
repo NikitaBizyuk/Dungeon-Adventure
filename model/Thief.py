@@ -40,9 +40,20 @@ class Thief(Hero):
     def projectile_damage(self):
         return 10
 
-    #Thief special skill goes here
     def special_skill(self, target):
-        pass
+        roll = random.random()
+        if roll < 0.4:
+            # Successful surprise — gets two hits
+            print(f"{self.name} performs a surprise double strike!")
+            self.attack(target)
+            self.attack(target)
+        elif roll < 0.6:
+            # Caught — no attack
+            print(f"{self.name}'s surprise attack failed! They were caught off guard.")
+        else:
+            # Normal attack
+            print(f"{self.name} performs a surprise attack (normal hit).")
+            self.attack(target)
 
     def get_melee_style(self):
         return {

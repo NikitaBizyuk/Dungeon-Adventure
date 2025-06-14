@@ -27,12 +27,13 @@ class Warrior(Hero):
                 print(f"{self.name}'s sword attack missed!")
 
     def special_skill(self, target):
+        print(f"{self.name} attempts a Crushing Blow!")
         if random.random() < 0.4:
             damage = random.randint(75, 175)
-            print(f"{self.name()} uses Crushing Blow for {damage} damage!")
+            print(f"💪 Crushing Blow lands for {damage} damage!")
             target.take_damage(damage)
         else:
-            print(f"{self.name()}'s Crushing Blow missed!")
+            print("❌ Crushing Blow missed!")
 
     @property
     def projectile_cooldown(self):

@@ -12,6 +12,7 @@ class Priestess(Hero):
         damage_min = 25
         damage_max = 45
         super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
+        self._max_health_points = health_points
 
     def attack(self, target, damage=None):
         if damage is not None:
@@ -19,23 +20,23 @@ class Priestess(Hero):
             print(f"{self.name} fires a sacred blast for {damage} damage.")
             target.take_damage(damage)
         else:
-            # Melee logic with hit chance and healing
+            # Melee logic with hit chance only
             if random.random() < self.chance_to_hit:
                 damage = random.randint(self.damage_min, self.damage_max)
                 print(f"{self.name} strikes with her staff for {damage} damage.")
                 target.take_damage(damage)
-
-                # Only heal if not at max HP, and with lower probability
-                if self.health_points < 100 and random.random() < 0.1:  # 10% chance
-                    heal = random.randint(8, 16)
-                    self.health_points = min(self.health_points + heal, 100)
-                    print(f"{self.name} heals herself for {heal} HP! New HP: {self.health_points}")
             else:
                 print(f"{self.name}'s staff attack missed!")
 
-    ## Priestess special skill goes here
     def special_skill(self, target):
-        pass
+        if self.health_points >= self._max_health_points:
+            print(f"{self.name} is already at full health!")
+            return
+
+        heal_amount = random.randint(20, 35)
+        actual_heal = min(heal_amount, self._max_health_points - self.health_points)
+        self.health_points += actual_heal
+        print(f"{self.name} uses Divine Grace and heals for {actual_heal} HP. New HP: {self.health_points}")
 
     @property
     def projectile_cooldown(self):

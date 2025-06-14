@@ -1,5 +1,6 @@
 import pygame
 
+
 class Button:
     def __init__(self, text, rect, font, color, hover_color):
         self.text = text
@@ -16,5 +17,9 @@ class Button:
         text_rect = text_surf.get_rect(center=self.rect.center)
         screen.blit(text_surf, text_rect)
 
-    def is_clicked(self, event):
-        return event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.rect.collidepoint(event.pos)
+    def is_clicked(self, event) -> bool:
+        return (
+            event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.rect.collidepoint(event.pos)
+        )

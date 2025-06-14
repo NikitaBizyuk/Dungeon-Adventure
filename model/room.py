@@ -28,7 +28,7 @@ class Room:
         self.hero_c = width // 2
         self.door_r = height - 1
         self.door_c = width // 2
-
+        self.is_trap = random.random() < 0.1
         self._carve_layout()
 
         # Difficulty-based monster range

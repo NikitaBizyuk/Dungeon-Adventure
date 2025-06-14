@@ -14,3 +14,18 @@ A real time dungeon game implemented in Python. It uses a MVC architecture and i
 ## Setup
 1. Clone the repo
 2. Create a virtual environment:
+## 🐉 Monster Database Setup
+
+This game uses a SQLite database (`monsters.db`) to store monster stats (HP, damage range, heal chance, etc.).
+
+### ⚠️ Note:
+The `monsters.db` file is **not included** in the repository (it's ignored by Git), so you'll need to generate it locally before running the game.
+
+### ✅ To Generate the Monster Database:
+
+1. Make sure you have Python installed.
+2. Run the following command in your terminal:
+
+```bash
+python data/init_monster_db.py
+
