@@ -6,11 +6,9 @@ from model.DungeonCharacter import DungeonCharacter
 class Hero(DungeonCharacter, ABC):
     """
     Abstract base class for all heroes.
-    Adds:
-        • instant_death()  – used when the hero falls into a pit
+    Includes shared combat and inventory behavior.
     """
 
-    # ─── Construction ────────────────────────────────────────────
     def __init__(
         self,
         name: str,
@@ -28,14 +26,14 @@ class Hero(DungeonCharacter, ABC):
             attack_speed,
             chance_to_hit
         )
-
         self._max_health_points = health_points
-        self._chance_to_block   = 0.90
-        self._healing_potions   = 0
-        self._vision_potions    = 0
-        self._pillars_found     = 0
+        self._chance_to_block = 0.90
+        self._healing_potions = 0
+        self._vision_potions = 0
+        self._pillars_found = 0
 
-    # ─── Abstract combat interface ───────────────────────────────
+    # ─── Abstract Methods ──────────────────────────────────────
+
     @abstractmethod
     def attack(self, target):
         pass
@@ -45,48 +43,36 @@ class Hero(DungeonCharacter, ABC):
         pass
 
     @property
+    @abstractmethod
+    def projectile_cooldown(self):
+        """Time in ms between shots."""
+        pass
+
+    @property
+    @abstractmethod
+    def projectile_speed(self):
+        """Pixels per frame."""
+        pass
+
+    @property
+    @abstractmethod
+    def projectile_damage(self):
+        """Damage dealt per projectile."""
+        pass
+
+    # ─── Properties ────────────────────────────────────────────
+
+    @property
+    def max_health_points(self):
+        return self._max_health_points
+
+    @property
     def chance_to_block(self):
         return self._chance_to_block
 
     @chance_to_block.setter
     def chance_to_block(self, value):
         self._chance_to_block = max(0.0, min(1.0, value))
-
-    def reduce_block_chance_after_boss(self):
-        self._chance_to_block = max(0.0, self._chance_to_block - 0.10)
-        print(f"{self.name}'s block chance reduced to {round(self._chance_to_block * 100)}%.")
-
-    def take_damage(self, amount):
-        if random.random() < self._chance_to_block:
-            print(f"{self.name} blocked the attack!")
-        else:
-            self.health_points -= amount
-            print(f"{self.name} took {amount} damage. HP: {self.health_points}")
-
-    # ─── NEW: Instant death (used by pits) ───────────────────────
-    def instant_death(self) -> None:
-        """Sets HP to zero immediately."""
-        self.health_points = 0
-        print(f"{self.name} fell into a pit and died!")
-
-    # ─── Projectile specs (abstract) ─────────────────────────────
-    @property
-    @abstractmethod
-    def projectile_cooldown(self):
-        """Time in ms between shots."""
-        raise NotImplementedError("Each hero must define their projectile cooldown.")
-
-    @property
-    @abstractmethod
-    def projectile_speed(self):
-        """Pixels per frame."""
-        raise NotImplementedError("Each hero must define their projectile speed.")
-
-    @property
-    @abstractmethod
-    def projectile_damage(self):
-        """Damage dealt per projectile."""
-        raise NotImplementedError("Each hero must define their projectile damage.")
 
     @property
     def pillars_found(self):
@@ -96,6 +82,22 @@ class Hero(DungeonCharacter, ABC):
     def pillars_found(self, value):
         self._pillars_found = value
 
+    # ─── Behavior Methods ──────────────────────────────────────
+
+    def take_damage(self, amount):
+        if random.random() < self._chance_to_block:
+            pass
+        else:
+            self.health_points -= amount
+
+
+    def instant_death(self):
+        """Sets health to 0 immediately (e.g., pit death)."""
+        self.health_points = 0
+
     def increment_pillars_found(self):
         self._pillars_found += 1
         self.reduce_block_chance_after_boss()
+
+    def reduce_block_chance_after_boss(self):
+        self._chance_to_block = max(0.0, self._chance_to_block - 0.10)

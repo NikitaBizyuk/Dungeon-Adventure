@@ -98,7 +98,7 @@ def main():
                         elif button.text == "LOAD":
                             loaded_game = load_game()
                             if loaded_game:
-                                loaded_game.view = view
+                                loaded_game.attach_view(view)  # Use the method you defined in DungeonAdventure
                                 game = loaded_game
                                 state = "playing"
                                 view.display_message("✅ Game Loaded!", 2000)
@@ -154,6 +154,7 @@ def main():
 
                                 hero_name = typed_name.strip()
                                 game = DungeonAdventure(view,hero_cls=hero_cls, hero_name=hero_name)
+                                game.attach_view(view)
                                 print(f"Started {hero_name} the {choice} on {pending_difficulty.upper()}")
                                 state = "playing"
 
@@ -172,15 +173,15 @@ def main():
                                 special_message = game.perform_special_attack()
                                 view.display_message(special_message)
                         elif event.key == pygame.K_h:
-                            if game.get_backpack().get_healing_cntr() > 0:
-                                game.get_backpack().use_healing_potion()
-                                game.get_hero().health_points = min(
-                                    game.get_hero().health_points + 20,
-                                    game.get_hero()._max_health_points
+                            if game.backpack.healing_cntr > 0:
+                                game.backpack.use_healing_potion()
+                                game.hero.health_points = min(
+                                    game.hero.health_points + 20,
+                                    game.hero.max_health_points
                                 )
                                 view.display_message("Used Health Potion (+20 HP)", 2000)
                         elif event.key == pygame.K_v:
-                            if game.get_backpack().use_vision_potion():
+                            if game.backpack.use_vision_potion():
                                 game.vision_reveal_start = pygame.time.get_ticks()
                                 view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
                     elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -270,11 +271,11 @@ def main():
                     continue
 
             if game.in_room:
-                view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
+                view.draw_room(game, WIDTH, HEIGHT, game.hero, game.backpack, Ogre, Skeleton, Gremlin,
                                OOPillars.ENCAPSULATION.symbol, OOPillars.POLYMORPHISM.symbol,
                                OOPillars.INHERITANCE.symbol, OOPillars.ABSTRACTION.symbol)
             else:
-                view.draw_maze(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack())
+                view.draw_maze(game, WIDTH, HEIGHT, game.hero, game.backpack)
 
             now = pygame.time.get_ticks()
             if game.special_active and now - game.last_special_used > game.special_duration:
@@ -289,7 +290,7 @@ def main():
             else:
                 status = "Special: Ready"
 
-            status = f"Lives: {game.get_lives()}   |   {status}"
+            status = f"Lives: {game.lives_remaining}   |   {status}"
             view.draw_status_bar(screen, status)
 
         elif state == "dead":

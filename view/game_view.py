@@ -378,7 +378,7 @@ class GameView:
 
         # Projectiles
         for projectile in game.projectiles:
-            px, py = projectile.get_position()
+            px, py = projectile.position
             draw_x = offset_x + px - (start_c * cell_size)
             draw_y = offset_y + py - (start_r * cell_size)
             pygame.draw.circle(self.screen, (255, 255, 255), (int(draw_x), int(draw_y)), 5)
@@ -448,14 +448,14 @@ class GameView:
         self.screen.blit(title, (inv_rect.x + 10, inv_rect.y + 10))
 
         items_to_display = {}
-        if backpack.get_healing_cntr() > 0:
-            items_to_display["Health Potion"] = backpack.get_healing_cntr()
-        if backpack.get_vision_cntr() > 0:
-            items_to_display["Vision Potion"] = backpack.get_vision_cntr()
+        if backpack.healing_cntr > 0:
+            items_to_display["Health Potion"] = backpack.healing_cntr
+        if backpack.vision_cntr > 0:
+            items_to_display["Vision Potion"] = backpack.vision_cntr
 
         from collections import Counter
 
-        inv_items = Counter(backpack.get_inventory())
+        inv_items = Counter(backpack.inventory)
         for item in inv_items:
             if item in {"A", "E", "I", "P"}:
                 items_to_display[item] = inv_items[item]

@@ -2,23 +2,16 @@ import random
 import math
 from model.Hero import Hero
 
-
 class Thief(Hero):
-    def __init__(self,name):
-        health_points = 125
-        damage_min = 20
-        damage_max = 40
-        attack_speed = 6
-        chance_to_hit = 0.8
-        super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
+    def __init__(self, name):
+        super().__init__(name, health_points=125, damage_min=20, damage_max=40,
+                         attack_speed=6, chance_to_hit=0.8)
 
     def attack(self, target, damage=None):
         if damage is not None:
-            # Projectile logic — single fast hit
             print(f"{self.name} hurls a throwing knife for {damage} damage.")
             target.take_damage(damage)
         else:
-            # Melee logic — dual stab with hit chance
             print(f"{self.name} performs a quick dual stab!")
             for i in range(2):
                 if random.random() < self.chance_to_hit:
@@ -27,6 +20,18 @@ class Thief(Hero):
                     target.take_damage(dmg)
                 else:
                     print(f"  Hit {i + 1}: missed!")
+
+    def special_skill(self, target):
+        roll = random.random()
+        if roll < 0.4:
+            print(f"{self.name} performs a surprise double strike!")
+            self.attack(target)
+            self.attack(target)
+        elif roll < 0.6:
+            print(f"{self.name}'s surprise attack failed! They were caught off guard.")
+        else:
+            print(f"{self.name} performs a surprise attack (normal hit).")
+            self.attack(target)
 
     @property
     def projectile_cooldown(self):
@@ -40,34 +45,21 @@ class Thief(Hero):
     def projectile_damage(self):
         return 10
 
-    def special_skill(self, target):
-        roll = random.random()
-        if roll < 0.4:
-            # Successful surprise — gets two hits
-            print(f"{self.name} performs a surprise double strike!")
-            self.attack(target)
-            self.attack(target)
-        elif roll < 0.6:
-            # Caught — no attack
-            print(f"{self.name}'s surprise attack failed! They were caught off guard.")
-        else:
-            # Normal attack
-            print(f"{self.name} performs a surprise attack (normal hit).")
-            self.attack(target)
-
     def get_melee_style(self):
         return {
-            "color": (0, 255, 0),  # Green
+            "color": (0, 255, 0),
             "arc_width": math.pi / 10,
             "reach": 35,
             "swings": 2
         }
 
-    def to_String(self) -> str:
-        result = ((("Name: " + self._name +
-                    "\nHP: " + str(self._health_points)) +
-                   "\nAttack speed: " + str(self._attack_speed) +
-                   "\nDamage min: " + str(self._damage_min)) +
-                  "\nDamage max: " + str(self._damage_max) +
-                  "\nChance to hit: " + str(self._chance_to_hit))
-        return result
+    def to_string(self):
+        return (
+            f"Name: {self.name}\n"
+            f"HP: {self.health_points}\n"
+            f"Attack Speed: {self.attack_speed}\n"
+            f"Damage: {self.damage_min} - {self.damage_max}\n"
+            f"Chance to Hit: {self.chance_to_hit}\n"
+            f"Chance to Block: {round(self.chance_to_block * 100)}%\n"
+            f"Pillars Found: {self.pillars_found}"
+        )

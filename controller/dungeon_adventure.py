@@ -6,215 +6,281 @@ from model.Projectile import Projectile
 from model.Backpack import BackPack
 from view.game_view import GameView
 
+
 class DungeonAdventure:
-    """
-    Central controller that manages hero, monsters, projectiles, rooms,
-    pit deaths, respawns, and a 3-life system.
-    """
+    """Central controller that manages gameplay and game state."""
 
-    def __init__(self, view, hero_cls=Warrior, hero_name: str = "Rudy") -> None:
-        self.dungeon = Dungeon(difficulty=Room._current_difficulty)
-        self.hero = hero_cls(hero_name)
-        self.my_back_pack = BackPack()
-        self.in_room = False
-        self.active_room = None
-        self.game_over = False
-        self.lives_remaining = 3
+    def __init__(self, view: GameView, hero_cls=Warrior, hero_name: str = "Rudy") -> None:
+        self._dungeon = Dungeon(difficulty=Room._current_difficulty)
+        self._hero = hero_cls(hero_name)
+        self._backpack = BackPack()
+        self._in_room = False
+        self._active_room = None
+        self._game_over = False
+        self._lives_remaining = 3
 
-        self.aim_vector = (1, 0)
+        self._aim_vector = (1, 0)
         self._projectiles = []
-        self.last_projectile_time = 0
-        self.monster_last_move_time = 0
+        self._last_projectile_time = 0
+        self._monster_last_move_time = 0
 
-        self.special_active = False
-        self.special_cooldown = 8000
-        self.special_duration = 3000
-        self.last_special_used = -9999
+        self._special_active = False
+        self._special_cooldown = 8000
+        self._special_duration = 3000
+        self._last_special_used = -9999
 
-        self.vision_reveal_start = None
-        self.vision_reveal_duration = 3000
-        self.view = view
+        self._vision_reveal_start = None
+        self._vision_reveal_duration = 3000
+        self._view = view
 
     def move_hero(self, dx, dy, view):
-        if self.dungeon.in_room:
-            outcome = self.dungeon.active_room.move_hero_in_room(
-                dx, dy, self.my_back_pack, view
-            )
+        if self._dungeon.in_room:
+            r_before, c_before = self._dungeon.active_room.get_hero_position()
+            outcome = self._dungeon.active_room.move_hero_in_room(dx, dy, self._backpack, view)
+            r_after, c_after = self._dungeon.active_room.get_hero_position()
+
             if outcome == "pit":
                 difficulty = Room._current_difficulty.lower()
 
                 if difficulty == "easy":
-                    self.hero.take_damage(30)
-                    self.view.display_message("⚠️ You fell into a pit! -30 HP", 2000)
+                    damage = 30
+                    self._hero.take_damage(damage)
+                    self._view.display_message("⚠️ You fell into a pit! -30 HP", 2000)
+
                 elif difficulty == "medium":
-                    self.hero.take_damage(50)
-                    self.view.display_message("⚠️ You fell into a pit! -50 HP", 2000)
-                else:  # hard
-                    self.hero.instant_death()
-                    self._lose_life_and_respawn()
-                    self.view.display_message("☠️ You fell into a pit and died!", 2000)
-                    return "pit"
+                    damage = 50
+                    self._hero.take_damage(damage)
+                    self._view.display_message("⚠️ You fell into a pit! -50 HP", 2000)
 
-                if self.hero.health_points <= 0:
+                else:  # hard mode — instant death
+                    self._hero.instant_death()
+                    self._view.display_message("☠️ You fell into a pit and died!", 2000)
+
+                # No matter the difficulty, check for death
+                if self._hero.health_points <= 0:
                     self._lose_life_and_respawn()
 
+                # ✅ Never overwrite the pit tile — keep it there
                 return "pit"
 
-            if outcome == "exit":
-                self._leave_room()
+
+            elif outcome == "exit":
+                self._in_room = False
+                self._dungeon.in_room = False
+                self._active_room = None
+                self._dungeon.update_visibility()
                 return "exit"
+
             return outcome
 
-        self.dungeon.move_hero(dx, dy)
-        cell = self.dungeon.maze[self.dungeon.hero_x][self.dungeon.hero_y]
-        print("cell:", cell.cell_type, "| pillars:", self.my_back_pack.pillar_cntr)
+        self._dungeon.move_hero(dx, dy, self._backpack, self._view)
+        cell = self._dungeon.maze[self._dungeon.hero_x][self._dungeon.hero_y]
 
-        if cell.cell_type == "exit" and self.my_back_pack.pillar_cntr == 4:
-            self.view.display_message("🏆 You escaped the dungeon!\nAll 4 Pillars Found!", 4000)
+        if cell.cell_type == "exit" and self._backpack.pillar_cntr == 4:
+            self._view.display_message("🏆 You escaped the dungeon!\nAll 4 Pillars Found!", 4000)
             for _ in range(60):
-                self.view.draw_maze(self, pygame.display.get_surface().get_width(),
-                                    pygame.display.get_surface().get_height(), self.get_hero(), self.get_backpack())
+                self._view.draw_maze(self, pygame.display.get_surface().get_width(),
+                                     pygame.display.get_surface().get_height(),
+                                     self._hero, self._backpack)
                 pygame.display.flip()
                 pygame.time.delay(16)
             return "win"
 
-        if self.dungeon.in_room:
-            self.in_room = True
-            self.active_room = self.dungeon.active_room
-            self.active_room.enter(self)
+        if self._dungeon.in_room:
+            self._in_room = True
+            self._active_room = self._dungeon.active_room
+            self._active_room.enter(self)
             return "room_enter"
 
         return None
 
     def _lose_life_and_respawn(self):
-        self.lives_remaining -= 1
-        print(f"❗ Life lost! Lives remaining: {self.lives_remaining}")
-        if self.lives_remaining <= 0:
-            self.game_over = True
-            print("💀 No lives left — game over.")
+        self._lives_remaining -= 1
+        if self._lives_remaining <= 0:
+            self._game_over = True
             return
-        self.hero.health_points = self.hero._max_health_points
+        self._hero.health_points = self._hero.max_health_points
         self._leave_room()
 
     def _leave_room(self):
-        self.in_room = False
-        self.dungeon.in_room = False
-        self.active_room = None
+        self._in_room = False
+        self._dungeon.in_room = False
+        self._active_room = None
+
 
     def move_monsters(self):
-        if not self.in_room or not self.active_room:
+        if not self._in_room or not self._active_room:
             return
         now = pygame.time.get_ticks()
-        if now - self.monster_last_move_time > 400:
-            self.active_room.move_monsters()
-            self.monster_last_move_time = now
+        if now - self._monster_last_move_time > 400:
+            self._active_room.move_monsters()
+            self._monster_last_move_time = now
 
     def perform_melee_attack(self):
-        if not self.in_room or not self.active_room:
+        if not self._in_room or not self._active_room:
             return
-        hero_r, hero_c = self.active_room.get_hero_position()
-        dx, dy = self.aim_vector
+        hero_r, hero_c = self._active_room.get_hero_position()
+        dx, dy = self._aim_vector
         if abs(dx) > abs(dy):
             tr, tc = hero_r, hero_c + (1 if dx > 0 else -1)
         else:
             tr, tc = hero_r + (1 if dy > 0 else -1), hero_c
 
-        monster = self.active_room.get_monster_at(tr, tc)
+        monster = self._active_room.get_monster_at(tr, tc)
         if monster:
-            if self.special_active:
-                self.hero.special_skill(monster)
+            if self._special_active:
+                self._hero.special_skill(monster)
             else:
-                self.hero.attack(monster)
+                self._hero.attack(monster)
             monster.flash_hit()
             if not monster.is_alive():
-                del self.active_room.monsters[monster]
+                del self._active_room.monsters[monster]
 
     def perform_ranged_attack(self, cell_size: int):
         now = pygame.time.get_ticks()
-        if now - self.last_projectile_time < self.hero.projectile_cooldown:
+        if now - self._last_projectile_time < self._hero.projectile_cooldown:
             return
-        dx, dy = self.aim_vector
+        dx, dy = self._aim_vector
 
-        if self.in_room and self.active_room:
-            r, c = self.active_room.get_hero_position()
+        if self._in_room and self._active_room:
+            r, c = self._active_room.get_hero_position()
         else:
-            r, c = self.dungeon.hero_x, self.dungeon.hero_y
+            r, c = self._dungeon.hero_x, self._dungeon.hero_y
 
         px = c * cell_size + cell_size // 2
         py = r * cell_size + cell_size // 2
 
         self._projectiles.append(
             Projectile(px, py, dx, dy,
-                       speed=self.hero.projectile_speed,
-                       damage=self.hero.projectile_damage)
+                       speed=self._hero.projectile_speed,
+                       damage=self._hero.projectile_damage)
         )
-        self.last_projectile_time = now
+        self._last_projectile_time = now
 
     def perform_special_attack(self) -> str:
         now = pygame.time.get_ticks()
-        if now - self.last_special_used < self.special_cooldown:
+        if now - self._last_special_used < self._special_cooldown:
             return "Special cooling down..."
-        self.last_special_used = now
-        self.special_active = True
+        self._last_special_used = now
+        self._special_active = True
         return "Special activated!"
 
     def update_projectiles(self, cell_size: int):
-        if not self.in_room or not self.active_room:
+        if not self._in_room or not self._active_room:
             return
-
-        room = self.active_room
+        room = self._active_room
         for p in self._projectiles:
             p.update()
             gx = int(p.x / cell_size)
             gy = int(p.y / cell_size)
             m = room.get_monster_at(gy, gx)
             if m:
-                self.hero.attack(m, p.damage)
+                self._hero.attack(m, p.damage)
                 m.flash_hit()
                 if not m.is_alive():
                     del room.monsters[m]
                 p.deactivate()
         self._projectiles = [p for p in self._projectiles if p.active]
 
+    def monster_attack_hero(self):
+        if not self._in_room or not self._active_room:
+            return
+        hr, hc = self._active_room.get_hero_position()
+        for m, (mr, mc) in self._active_room.monsters.items():
+            if abs(mr - hr) + abs(mc - hc) == 1:
+                m.attack(self._hero)
+                if self._hero.health_points <= 0:
+                    self._lose_life_and_respawn()
+
+    @property
+    def special_active(self):
+        if not self._special_active:
+            return False
+        now = pygame.time.get_ticks()
+        if now - self._last_special_used > self._special_duration:
+            self._special_active = False
+            return False
+        return True
+
+    @property
+    def special_remaining_time(self):
+        if not self._special_active:
+            return 0
+        now = pygame.time.get_ticks()
+        return max(0, self._special_duration - (now - self._last_special_used))
+
+    @property
+    def aim_vector(self):
+        return self._aim_vector
+
+    @aim_vector.setter
+    def aim_vector(self, value):
+        self._aim_vector = value
+
     @property
     def projectiles(self):
         return self._projectiles
 
-    def monster_attack_hero(self):
-        if not self.in_room or not self.active_room:
-            return
-        hr, hc = self.active_room.get_hero_position()
-        for m, (mr, mc) in self.active_room.monsters.items():
-            if abs(mr - hr) + abs(mc - hc) == 1:
-                m.attack(self.hero)
-                if self.hero.health_points <= 0:
-                    self._lose_life_and_respawn()
+    @property
+    def hero(self):
+        return self._hero
 
-    def is_special_active(self):
-        if not self.special_active:
-            return False
-        now = pygame.time.get_ticks()
-        if now - self.last_special_used > self.special_duration:
-            self.special_active = False
-            return False
-        return True
+    @property
+    def backpack(self):
+        return self._backpack
 
-    def get_special_remaining_time(self):
-        if not self.special_active:
-            return 0
-        now = pygame.time.get_ticks()
-        return max(0, self.special_duration - (now - self.last_special_used))
+    @property
+    def lives_remaining(self):
+        return self._lives_remaining
 
-    def get_hero(self):       return self.hero
-    def get_backpack(self):   return self.my_back_pack
-    def get_lives(self):      return self.lives_remaining
+    @property
+    def game_over(self):
+        return self._game_over
 
+    @property
+    def dungeon(self):
+        return self._dungeon
+
+    @property
+    def active_room(self):
+        return self._active_room
+
+    @property
+    def in_room(self):
+        return self._in_room
+
+    @property
+    def last_special_used(self):
+        return self._last_special_used
+
+    @property
+    def special_cooldown(self):
+        return self._special_cooldown
+
+    @property
+    def special_duration(self):
+        return self._special_duration
+
+    @property
+    def vision_reveal_start(self):
+        return self._vision_reveal_start
+
+    @property
+    def vision_reveal_duration(self):
+        return self._vision_reveal_duration
+
+    def attach_view(self, view):
+        self._view = view
+
+    @vision_reveal_start.setter
+    def vision_reveal_start(self, value):
+        self._vision_reveal_start = value
     def __getstate__(self):
         state = self.__dict__.copy()
-        if "view" in state:
-            del state["view"]
+        if "_view" in state:
+            del state["_view"]
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self.view = None
+        self._view = None

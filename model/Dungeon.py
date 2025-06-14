@@ -3,29 +3,40 @@ from model.Room import Room
 from model.MazeCell import MazeCell
 from model.OOPillars import OOPillars
 
+
 class Dungeon:
     def __init__(self, difficulty="medium"):
-        if difficulty == "easy":
-            self._rows, self._cols = 41, 41
-            self._room_count = 8
-        elif difficulty == "hard":
-            self._rows, self._cols = 81, 81
-            self._room_count = 25
-        else:
-            self._rows, self._cols = 61, 61
-            self._room_count = 15
+        self._difficulty = difficulty.lower()
+        self._rows, self._cols, self._room_count = self._configure_difficulty(self._difficulty)
 
-        self._difficulty = difficulty
-        self._maze = [[MazeCell(r, c) for c in range(self._cols)] for r in range(self._rows)]
+        self._maze = []
         self._rooms = {}
         self._hero_x = 0
         self._hero_y = 0
         self._in_room = False
         self._active_room = None
         self._room_exit_point = None
-        self._room_templates = self._define_room_templates()
         self._room_centers = []
+        self._room_templates = self._define_room_templates()
 
+        self._generate_maze_with_valid_rooms()
+        self._place_exit()
+        self._place_hero_start()
+        self.update_visibility()
+        self._place_pillars()
+
+    def _configure_difficulty(self, difficulty):
+        if difficulty == "easy":
+            return 41, 41, 8
+        elif difficulty == "hard":
+            return 81, 81, 25
+        else:
+            return 61, 61, 15
+
+    def _define_room_templates(self):
+        return [(3, 3), (5, 5), (3, 5), (5, 3), (4, 6), (6, 4), (6, 6), (4, 4)]
+
+    def _generate_maze_with_valid_rooms(self):
         for _ in range(5):
             self._maze = [[MazeCell(r, c) for c in range(self._cols)] for r in range(self._rows)]
             self._rooms = {}
@@ -35,30 +46,9 @@ class Dungeon:
             self._place_doors()
 
             if len(self._rooms) >= 4:
-                break
-        else:
-            raise Exception("Failed to generate enough rooms with doors.")
+                return
 
-        if len(self._rooms) < 4:
-            raise Exception(f"Only {len(self._rooms)} rooms generated, need at least 4.")
-
-        self._place_exit()
-        self._place_hero_start()
-        self.update_visibility()
-
-        # Place 4 pillars in 4 random rooms
-        pillar_symbols = [
-            OOPillars.ABSTRACTION.symbol,
-            OOPillars.ENCAPSULATION.symbol,
-            OOPillars.INHERITANCE.symbol,
-            OOPillars.POLYMORPHISM.symbol
-        ]
-        selected_rooms = random.sample(list(self._rooms.values()), 4)
-        for room, symbol in zip(selected_rooms, pillar_symbols):
-            room.place_item(symbol)
-
-    def _define_room_templates(self):
-        return [(3, 3), (5, 5), (3, 5), (5, 3), (4, 6), (6, 4), (6, 6), (4, 4)]
+        raise Exception("Failed to generate enough rooms with doors.")
 
     def _generate_handcrafted_layout(self):
         for r in range(self._rows):
@@ -76,6 +66,7 @@ class Dungeon:
                 self._room_centers.append((top + h // 2, left + w // 2))
                 placed += 1
             attempts += 1
+
         self._connect_rooms_with_path()
 
     def _can_place_room(self, top, left, height, width):
@@ -131,12 +122,23 @@ class Dungeon:
                     door_id += 1
                     break
 
-    def _place_hero_start(self):
-        self._hero_x, self._hero_y = self._room_centers[0]
-
     def _place_exit(self):
         r, c = self._room_centers[-1]
         self._maze[r][c].cell_type = "exit"
+
+    def _place_hero_start(self):
+        self._hero_x, self._hero_y = self._room_centers[0]
+
+    def _place_pillars(self):
+        pillar_symbols = [
+            OOPillars.ABSTRACTION.symbol,
+            OOPillars.ENCAPSULATION.symbol,
+            OOPillars.INHERITANCE.symbol,
+            OOPillars.POLYMORPHISM.symbol
+        ]
+        selected_rooms = random.sample(list(self._rooms.values()), 4)
+        for room, symbol in zip(selected_rooms, pillar_symbols):
+            room.place_item(symbol)
 
     def update_visibility(self):
         radius = 6
@@ -151,9 +153,9 @@ class Dungeon:
                     self._maze[x][y].visible = True
                     self._maze[x][y].explored = True
 
-    def move_hero(self, dx, dy):
+    def move_hero_in_room(self, dx, dy, backpack, view=None):
         if self._in_room:
-            status = self._active_room.move_hero_in_room(dx, dy)
+            status = self._active_room.move_hero_in_room(dx, dy, backpack, view)
             self._active_room.move_monsters()
             if status == "exit":
                 self._in_room = False
@@ -174,22 +176,30 @@ class Dungeon:
                     elif tile.cell_type == "exit":
                         print("Reached exit!")
 
-    # ────────── Public Getters ──────────
+    # ────── Properties for External Access ──────
     @property
     def maze(self): return self._maze
+
     @property
     def hero_x(self): return self._hero_x
+
     @property
     def hero_y(self): return self._hero_y
+
     @property
     def in_room(self): return self._in_room
+
     @in_room.setter
     def in_room(self, value): self._in_room = value
+
     @property
     def active_room(self): return self._active_room
+
     @property
     def rooms(self): return self._rooms
+
     @property
     def rows(self): return self._rows
+
     @property
     def cols(self): return self._cols

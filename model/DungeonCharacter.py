@@ -12,13 +12,16 @@ class DungeonCharacter(ABC):
 
     @abstractmethod
     def attack(self, target):
+        """Must be implemented by subclasses to handle attacking logic."""
         pass
 
     @abstractmethod
     def take_damage(self, amount):
+        """Must be implemented by subclasses to handle damage intake."""
         pass
 
     def is_alive(self):
+        """Returns True if the character is still alive."""
         return self._health_points > 0
 
     @property

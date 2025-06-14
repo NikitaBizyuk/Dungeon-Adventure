@@ -2,95 +2,95 @@ import random
 from model.MonsterFactory import MonsterFactory
 from model.OOPillars import OOPillars
 
-class Room:
-    # ───── Static class-level values ─────
-    room_ID = 0
-    #loot = ["A", "E", "I","P", "Health Potion", "Vision Potion"]
 
+class Room:
+    _room_id = 0
+    _current_difficulty = "medium"
     _DIFFICULTY_TO_RANGE = {
         "easy": (1, 3),
         "medium": (4, 7),
         "hard": (8, 10),
     }
-    _current_difficulty = "medium"
 
     @classmethod
     def set_difficulty(cls, level):
-        """Sets monster spawn difficulty for all future rooms."""
-        cls._current_difficulty = level if level in cls._DIFFICULTY_TO_RANGE else "medium"
+        if level in cls._DIFFICULTY_TO_RANGE:
+            cls._current_difficulty = level
 
-    # ───── Room Initialization ─────
     def __init__(self, door_r, door_c, width=25, height=15):
-        self.width = width
-        self.height = height
-        self.grid = [["wall" for _ in range(width)] for _ in range(height)]
-        self.hero_r = height - 2
-        self.hero_c = width // 2
-        self.door_r = height - 1
-        self.door_c = width // 2
-        self.is_trap = random.random() < 0.1
+        self._width = width
+        self._height = height
+        self._grid = [["wall" for _ in range(width)] for _ in range(height)]
+
+        self._door_r = height - 1
+        self._door_c = width // 2
+        self._hero_r = height - 2
+        self._hero_c = width // 2
+        self._is_trap = random.random() < 0.1
+
         self._carve_layout()
         self.place_random_pits()
 
-        # Difficulty-based monster range
         low, high = Room._DIFFICULTY_TO_RANGE[Room._current_difficulty]
-        self.num_monsters = random.randint(low, high)
+        self._num_monsters = random.randint(low, high)
 
-        self.monsters = {
+        self._monsters = {
             MonsterFactory.create_random_monster(): (
                 random.randint(1, height - 2),
                 random.randint(1, width - 2)
             )
-            for _ in range(self.num_monsters)
+            for _ in range(self._num_monsters)
         }
 
-        #random.shuffle(Room.loot)
-        Room.room_ID += 1
+        Room._room_id += 1
+
+    def _carve_layout(self):
+        for r in range(1, self._height - 1):
+            for c in range(1, self._width - 1):
+                self._grid[r][c] = "floor"
+        self._grid[self._door_r][self._door_c] = "door"
+        self._grid[self._hero_r][self._hero_c] = "floor"
 
     def place_item(self, item_symbol):
         empty_tiles = [
             (r, c)
-            for r in range(1, self.height - 1)
-            for c in range(1, self.width - 1)
-            if self.grid[r][c] == "floor"
+            for r in range(1, self._height - 1)
+            for c in range(1, self._width - 1)
+            if self._grid[r][c] == "floor"
         ]
         if empty_tiles:
             r, c = random.choice(empty_tiles)
-            self.grid[r][c] = item_symbol
-
-    def _carve_layout(self):
-         for r in range(1, self.height - 1):
-            for c in range(1, self.width - 1):
-     #             if r == (self.height - 1) / 2 and c == (self.width - 1) / 2:
-    #                 random.shuffle(self.loot)
-                     self.grid[r][c] = "floor"
-    #                 if Room.loot[0] in {"A", "E", "I", "P"}:
-    #                     Room.loot.pop(0)
-    #             else:
-    #                 self.grid[r][c] = "floor"
-    #
-            self.grid[self.door_r][self.door_c] = "door"
-            self.grid[self.hero_r][self.hero_c] = "floor"
+            self._grid[r][c] = item_symbol
 
     def place_random_loot(self):
         loot_candidates = []
-        if random.random() < 0.6:  # 60% chance to place health potion
+        if random.random() < 0.6:
             loot_candidates.append("Health Potion")
-        if random.random() < 0.5:  # 50% chance to place vision potion
+        if random.random() < 0.5:
             loot_candidates.append("Vision Potion")
 
         for item in loot_candidates:
             self.place_item(item)
 
+    def place_random_pits(self):
+        num_pits = random.randint(1, 3)
+        placed = 0
+        while placed < num_pits:
+            r = random.randint(1, self._height - 2)
+            c = random.randint(1, self._width - 2)
+            if self._grid[r][c] == "floor":
+                self._grid[r][c] = "pit"
+                placed += 1
+
     def move_monsters(self):
         new_positions = {}
-        occupied = set(self.monsters.values())
-        occupied.add((self.hero_r, self.hero_c))
+        occupied = set(self._monsters.values())
+        occupied.add((self._hero_r, self._hero_c))
 
-        for monster in list(self.monsters.keys()):
-            r, c = self.monsters[monster]
-            dr = 1 if r < self.hero_r else -1 if r > self.hero_r else 0
-            dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
+        for monster in list(self._monsters.keys()):
+            r, c = self._monsters[monster]
+            dr = 1 if r < self._hero_r else -1 if r > self._hero_r else 0
+            dc = 1 if c < self._hero_c else -1 if c > self._hero_c else 0
             new_r = r + dr
             new_c = c + dc
 
@@ -99,115 +99,119 @@ class Room:
             if random.randint(1, 100) % 4 == 0: new_c += 1
             if random.randint(1, 100) % 9 == 0: new_c += 1
 
-            if (0 <= new_r < self.height and 0 <= new_c < self.width and
-                    self.grid[new_r][new_c] in ["floor", "door"] and
-                    (new_r, new_c) not in occupied):
+            if (0 <= new_r < self._height and 0 <= new_c < self._width and
+                self._grid[new_r][new_c] in ["floor", "door"] and
+                (new_r, new_c) not in occupied):
                 new_positions[monster] = (new_r, new_c)
                 occupied.add((new_r, new_c))
             else:
                 new_positions[monster] = (r, c)
                 occupied.add((r, c))
 
-        self.monsters = new_positions
+        self._monsters = new_positions
 
-    def move_hero_in_room(self, dx, dy, back_pack, view=None):
-        nr = self.hero_r + dx
-        nc = self.hero_c + dy
+    def move_hero_in_room(self, dx, dy, backpack, view=None):
+        nr = self._hero_r + dx
+        nc = self._hero_c + dy
 
-        if 0 <= nr < self.height and 0 <= nc < self.width:
-            target = self.grid[nr][nc]
-            if any((nr, nc) == (mr, mc) for (mr, mc) in self.monsters.values()):
+        if 0 <= nr < self._height and 0 <= nc < self._width:
+            target = self._grid[nr][nc]
+
+            if any((nr, nc) == (mr, mc) for (mr, mc) in self._monsters.values()):
                 return None
-            if target in ["floor", "door", "A", "E", "I", "P", "Health Potion", "Vision Potion"]:
-                self.hero_r = nr
-                self.hero_c = nc
+
+            if target == "pit":
+                self._hero_r = nr
+                self._hero_c = nc
+                print("💥 You fell into a pit!")  # This is fine
+                return "pit"  # ✅ Correct – doesn't overwrite grid
+
+            elif target in ["floor", "door", "A", "E", "I", "P", "Health Potion", "Vision Potion"]:
+                self._hero_r = nr
+                self._hero_c = nc
+
                 if target == "door":
                     return "exit"
-            elif target == "pit":
-                self.hero_r = nr
-                self.hero_c = nc
-                print("💥 You fell into a pit!")
-                return "pit"
-            if target in ["A","E","I","P","Health Potion", "Vision Potion"]:
-                back_pack.add(target,view)
-                self.grid[nr][nc] = "floor"
-                print("my back pack has",back_pack.to_string())
+
+                if target in ["A", "E", "I", "P", "Health Potion", "Vision Potion"]:
+                    backpack.add(target, view)
+                    self._grid[nr][nc] = "floor"
+                    print("🎒 Backpack now contains:", backpack.to_string())
+
         return None
 
     def enter(self, hero):
-        """Place hero at door and move monsters away from spawn point."""
-        self.hero_r = self.door_r - 1
-        self.hero_c = self.door_c
+        """Place hero at entry point and move monsters away from spawn area."""
+        self._hero_r = self._door_r - 1
+        self._hero_c = self._door_c
 
         spawn_area = {
-            (self.hero_r + dx, self.hero_c + dy)
+            (self._hero_r + dx, self._hero_c + dy)
             for dx in range(-2, 3)
             for dy in range(-2, 3)
-            if 0 <= self.hero_r + dx < self.height and 0 <= self.hero_c + dy < self.width
+            if 0 <= self._hero_r + dx < self._height and 0 <= self._hero_c + dy < self._width
         }
 
         safe_positions = [
             (r, c)
-            for r in range(1, self.height - 1)
-            for c in range(1, self.width - 1)
-            if self.grid[r][c] in {"floor", "door"} and (r, c) not in spawn_area
+            for r in range(1, self._height - 1)
+            for c in range(1, self._width - 1)
+            if self._grid[r][c] in {"floor", "door"} and (r, c) not in spawn_area
         ]
         random.shuffle(safe_positions)
 
         new_monsters = {}
-        for monster in self.monsters:
-            current_pos = self.monsters[monster]
+        for monster in self._monsters:
+            current_pos = self._monsters[monster]
             if current_pos in spawn_area and safe_positions:
                 new_monsters[monster] = safe_positions.pop()
             else:
                 new_monsters[monster] = current_pos
 
-        self.monsters = new_monsters
+        self._monsters = new_monsters
 
     # ───── Accessors ─────
+
     def get_tile(self, r, c):
-        return self.grid[r][c]
+        return self._grid[r][c]
 
     def get_hero_position(self):
-        return self.hero_r, self.hero_c
+        return self._hero_r, self._hero_c
 
     def get_dimensions(self):
-        return self.height, self.width
+        return self._height, self._width
 
     def get_monsters(self):
-        return self.monsters
+        return self._monsters
 
     def get_monster_at(self, r, c):
-        for monster, (mr, mc) in self.monsters.items():
+        for monster, (mr, mc) in self._monsters.items():
             if (mr, mc) == (r, c):
                 return monster
         return None
 
-    def place_random_pits(self):
-        num_pits = random.randint(1, 3)
-        placed = 0
-        while placed < num_pits:
-            r = random.randint(1, self.height - 2)
-            c = random.randint(1, self.width - 2)
-            if self.grid[r][c] == "floor":
-                self.grid[r][c] = "pit"
-                placed += 1
+    @property
+    def height(self):
+        return self._height
 
+    @property
+    def width(self):
+        return self._width
 
-    def toString(self):
+    @property
+    def monsters(self):
+        return self._monsters
+
+    def to_string(self):
         result = ""
-        for r in range(15):
-            for c in range(100):
-                # Top and bottom borders
-                if r == 0 or r == 14:
+        for r in range(self._height):
+            for c in range(self._width):
+                if r == 0 or r == self._height - 1:
                     result += "*"
-                # Side borders
-                elif c == 0 or c == 99:
+                elif c == 0 or c == self._width - 1:
                     result += "*"
-                elif c == 50 and r == 14:
-                    result += "_"  # door in the middle bottom
-
-                # Interior space
+                elif c == self._door_c and r == self._door_r:
+                    result += "_"
                 else:
                     result += " "
             result += "\n"
