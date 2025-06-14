@@ -23,35 +23,22 @@ class DungeonAdventure:
         self.dungeon = Dungeon(difficulty=Room._current_difficulty)
         self.hero = hero_cls(hero_name)
         self.my_back_pack = BackPack()
-
-        # ─── Position / room flags ───────────────────────────────────────
         self.in_room = False
-        self.active_room = None  # type: Room | None
+        self.active_room = None
         self.aim_vector = (1, 0)
-
-        # ─── Monster timers ──────────────────────────────────────────────
         self.monster_last_move_time = 0
-
-        # ─── Projectiles ────────────────────────────────────────────────
-        self._projectiles: list[Projectile] = []
+        self._projectiles = []
         self.last_projectile_time = 0
-
-        # ─── Special ability timers ─────────────────────────────────────
         self.special_active = False
-        self.special_cooldown = 8000  # ms
-        self.special_duration = 3000  # ms
+        self.special_cooldown = 8000
+        self.special_duration = 3000
         self.last_special_used = -9999
+        self.vision_reveal_start = None
+        self.vision_reveal_duration = 3000
 
-        # ─── Vision potion timer ────────────────────────────────────────
-        self.vision_reveal_start: int | None = None
-        self.vision_reveal_duration = 3000  # ms
-
-    # ─────────────────────────── Movement ──────────────────────────────
-    def move_hero(self, dx: int, dy: int) -> None:
+    def move_hero(self, dx, dy):
         if self.dungeon.in_room:
-            status = self.dungeon.active_room.move_hero_in_room(
-                dx, dy, self.my_back_pack
-            )
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy, self.my_back_pack)
             if status == "exit":
                 self.dungeon.in_room = False
                 self.dungeon.active_room = None
@@ -63,42 +50,42 @@ class DungeonAdventure:
                 self.in_room = True
                 self.active_room = self.dungeon.active_room
 
-    def move_monsters(self) -> None:
+    def move_monsters(self):
         if self.in_room:
-            now = pygame.time.get_ticks()
-            if now - self.monster_last_move_time > 400:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.monster_last_move_time > 400:
                 self.dungeon.active_room.move_monsters()
-                self.monster_last_move_time = now
+                self.monster_last_move_time = current_time
 
-    # ─────────────────────────── Attacks ───────────────────────────────
-    def perform_melee_attack(self) -> None:
+    def perform_melee_attack(self):
         if self.in_room and self.active_room:
             hero_r, hero_c = self.active_room.get_hero_position()
             dx, dy = self.aim_vector
 
-            if abs(dx) > abs(dy):  # horizontal swing
+            if abs(dx) > abs(dy):
                 target_r = hero_r
                 target_c = hero_c + (1 if dx > 0 else -1)
-            else:  # vertical swing
+            else:
                 target_r = hero_r + (1 if dy > 0 else -1)
                 target_c = hero_c
 
             monster = self.active_room.get_monster_at(target_r, target_c)
             if monster:
-                print(
-                    f"🗡️ {self.hero.name} attacks {monster.name} at ({target_r}, {target_c})"
-                )
-                self.hero.attack(monster)
+                print(f"🗡️ {self.hero.name} attacks {monster.name} at ({target_r}, {target_c})")
+                if self.special_active:
+                    self.hero.special_skill(monster)
+                else:
+                    self.hero.attack(monster)
                 monster.flash_hit()
                 print(f"🧟 {monster.name} HP after attack: {monster.health_points}")
                 if not monster.is_alive():
-                    print(f"💀 {monster.name} has died.")
+                    print(f"💀 {monster.name} has died and is removed from the room.")
                     del self.active_room.monsters[monster]
 
-    def perform_ranged_attack(self, cell_size: int) -> None:
-        now = pygame.time.get_ticks()
-        if now - self.last_projectile_time < self.hero.projectile_cooldown:
-            return  # still cooling down
+    def perform_ranged_attack(self, cell_size):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_projectile_time < self.hero.projectile_cooldown:
+            return
 
         dx, dy = self.aim_vector
 
@@ -111,29 +98,24 @@ class DungeonAdventure:
         y = hero_r * cell_size + cell_size // 2
 
         projectile = Projectile(
-            x,
-            y,
-            dx,
-            dy,
+            x, y, dx, dy,
             speed=self.hero.projectile_speed,
-            damage=self.hero.projectile_damage,
+            damage=self.hero.projectile_damage
         )
 
         self.projectiles.append(projectile)
-        self.last_projectile_time = now
+        self.last_projectile_time = current_time
 
-    def perform_special_attack(self) -> str:
+    def perform_special_attack(self):
         now = pygame.time.get_ticks()
         if now - self.last_special_used < self.special_cooldown:
             return "Special cooling down..."
 
-        self.hero.special_skill(None)
         self.last_special_used = now
         self.special_active = True
         return "Special activated!"
 
-    # ─────────────────────────── Projectiles ──────────────────────────
-    def update_projectiles(self, cell_size: int) -> None:
+    def update_projectiles(self, cell_size):
         if not self.in_room or not self.active_room:
             return
 
@@ -141,14 +123,13 @@ class DungeonAdventure:
         for projectile in self.projectiles:
             projectile.update()
             px, py = projectile.get_position()
+
             grid_x = int(px / cell_size)
             grid_y = int(py / cell_size)
 
             monster = room.get_monster_at(grid_y, grid_x)
             if monster:
-                print(
-                    f"🏹 {self.hero.name}'s projectile hits {monster.name} at ({grid_y}, {grid_x})"
-                )
+                print(f"🏹 {self.hero.name}'s projectile hits {monster.name} at ({grid_y}, {grid_x})")
                 self.hero.attack(monster, projectile.damage)
                 monster.flash_hit()
                 if not monster.is_alive():
@@ -162,39 +143,36 @@ class DungeonAdventure:
     def projectiles(self):
         return self._projectiles
 
-    # ───────────────────────── Monster AI ────────────────────────────
-    def monster_attack_hero(self) -> None:
+    def monster_attack_hero(self):
         if not self.in_room or not self.active_room:
             return
 
         hero_r, hero_c = self.active_room.get_hero_position()
 
-        for monster, (mr, mc) in list(self.active_room.monsters.items()):
+        for monster, (mr, mc) in self.active_room.monsters.items():
             if abs(mr - hero_r) + abs(mc - hero_c) == 1:
-                print(f"💀 {monster.name} attacks the hero!")
+                print(f"💀 {monster.name} is adjacent to the hero and attacks!")
                 monster.attack(self.hero)
                 self.check_hero_defeated()
 
-    def check_hero_defeated(self) -> None:
+    def check_hero_defeated(self):
         if self.hero.health_points <= 0:
-            print(f"💀 {self.hero.name} has been defeated! Returning to maze.")
+            print(f"💀 {self.hero.name} has been defeated! Returning to maze with full HP...")
             self.hero.health_points = 100
             self.exit_room()
 
-    # ───────────────────────── Helpers / Getters ─────────────────────
     def get_hero(self):
         return self.hero
 
     def get_backpack(self):
         return self.my_back_pack
 
-    def exit_room(self) -> None:
+    def exit_room(self):
         self.in_room = False
         self.dungeon.in_room = False
         self.active_room = None
 
-    # ───────────────────────── Special timers ────────────────────────
-    def is_special_active(self) -> bool:
+    def is_special_active(self):
         if not self.special_active:
             return False
 
@@ -205,8 +183,9 @@ class DungeonAdventure:
 
         return True
 
-    def get_special_remaining_time(self) -> int:
+    def get_special_remaining_time(self):
         if not self.special_active:
             return 0
         now = pygame.time.get_ticks()
-        return max(0, self.special_duration - (now - self.last_special_used))
+        remaining = max(0, self.special_duration - (now - self.last_special_used))
+        return remaining
