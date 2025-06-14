@@ -1,14 +1,7 @@
 import random
 from model.MonsterFactory import MonsterFactory
+from model.OOPillars import OOPillars
 
-<<<<<<< Updated upstream
-class Room:
-    # ───── Static class-level values ─────
-    room_ID = 0
-    loot = ["Encapsulation", "Abstraction", "Polymorphism",
-            "Inheritance", "Health Potion", "Vision Potion"]
-=======
->>>>>>> Stashed changes
 
 class Room:
     # ──────────────────────────────────────────────────────────────
@@ -44,11 +37,7 @@ class Room:
         self.hero_r = height - 2
         self.hero_c = width  // 2
         self.door_r = height - 1
-<<<<<<< Updated upstream
-        self.door_c = width // 2
-=======
         self.door_c = width  // 2
->>>>>>> Stashed changes
 
         self._carve_layout()
         self._spawn_pits()
@@ -59,14 +48,10 @@ class Room:
     def _carve_layout(self):
         for r in range(1, self.height - 1):
             for c in range(1, self.width - 1):
-<<<<<<< Updated upstream
-                if r == (self.height - 1) / 2 and c == (self.width - 1) / 2:
-=======
                 if r == (self.height - 1) // 2 and c == (self.width - 1) // 2:
                     random.shuffle(Room.loot)
->>>>>>> Stashed changes
                     self.grid[r][c] = Room.loot[0]
-                    if Room.loot[0] in {"Encapsulation", "Abstraction", "Polymorphism", "Inheritance"}:
+                    if Room.loot[0] in {"A", "E", "I", "P"}:
                         Room.loot.pop(0)
                 else:
                     self.grid[r][c] = "floor"
@@ -131,21 +116,6 @@ class Room:
 
         self.monsters = new_pos
 
-<<<<<<< Updated upstream
-    def move_hero_in_room(self, dx, dy):
-        nr = self.hero_r + dx
-        nc = self.hero_c + dy
-
-        if 0 <= nr < self.height and 0 <= nc < self.width:
-            target = self.grid[nr][nc]
-            if any((nr, nc) == (mr, mc) for (mr, mc) in self.monsters.values()):
-                return None
-            if target in ["floor", "door"]:
-                self.hero_r = nr
-                self.hero_c = nc
-                if target == "door":
-                    return "exit"
-=======
     # ──────────────────────────────────────────────────────────────
     def move_hero_in_room(self, dx: int, dy: int, backpack):
         nr, nc = self.hero_r + dx, self.hero_c + dy
@@ -169,7 +139,6 @@ class Room:
             if tile in {"A", "E", "I", "P", "Health Potion", "Vision Potion"}:
                 backpack.add(tile)
                 self.grid[nr][nc] = "floor"
->>>>>>> Stashed changes
         return None
 
     # ──────────────────────────────────────────────────────────────

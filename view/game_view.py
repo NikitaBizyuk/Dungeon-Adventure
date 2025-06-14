@@ -1,22 +1,16 @@
 import pygame
+import os
 import math
+
 from view.menu_button import Button
+
+
 class GameView:
     def __init__(self, screen, cell_size, view_rows, view_cols):
         self.screen = screen
         self.cell_size = cell_size
         self.view_rows = view_rows
         self.view_cols = view_cols
-<<<<<<< Updated upstream
-        self.last_attack_time = 0
-        self.attack_duration = 150
-        self.font = pygame.font.Font(None, 60)
-
-        self.menu_buttons = self.create_menu_buttons()
-        self.difficulty_buttons = self.create_difficulty_buttons()
-
-    def create_menu_buttons(self):
-=======
 
         # attack-animation timing
         self.last_attack_time = 0
@@ -46,41 +40,21 @@ class GameView:
 
     # ────────────────────────── button factories ──────────────────────────
     def _create_menu_buttons(self):
->>>>>>> Stashed changes
         w, h = self.screen.get_size()
         mk = lambda txt, y: Button(
             txt, pygame.Rect(w // 2 - 100, y, 200, 60),
             self.font, (200, 200, 200), (255, 255, 0)
         )
         return [
-<<<<<<< Updated upstream
-            Button("PLAY", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
-            Button("LOAD", pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
-            Button("ABOUT", pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
-            Button("QUIT", pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60), self.font, (200, 200, 200), (255, 255, 0)),
-=======
             mk("PLAY",  h // 2 - 150),
             mk("LOAD",  h // 2 -  50),
             mk("ABOUT", h // 2 +  50),
             mk("QUIT",  h // 2 + 150),
->>>>>>> Stashed changes
         ]
 
     def _create_difficulty_buttons(self):
         w, h = self.screen.get_size()
         return [
-<<<<<<< Updated upstream
-            Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
-            Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2, 200, 60), self.font, (200, 200, 200), (255, 165, 0)),
-            Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
-        ]
-
-    def draw_buttons(self, buttons):
-        for button in buttons:
-            button.draw(self.screen)
-
-    def draw_maze(self, game):
-=======
             Button("EASY",   pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60),
                    self.font, (200, 200, 200), (  0, 255,   0)),
             Button("MEDIUM", pygame.Rect(w // 2 - 100, h // 2,       200, 60),
@@ -168,56 +142,29 @@ class GameView:
 
     # ────────────────────────── maze view ────────────────────────────────
     def draw_maze(self, game, W, H, hero, backpack):
->>>>>>> Stashed changes
         dungeon = game.dungeon
         hr, hc = dungeon.hero_x, dungeon.hero_y
         aim_dx, aim_dy = game.aim_vector
-        view_rows, view_cols = self.view_rows, self.view_cols
 
-<<<<<<< Updated upstream
-        start_r = max(0, min(dungeon.rows - view_rows, hero_x - view_rows // 2))
-        start_c = max(0, min(dungeon.cols - view_cols, hero_y - view_cols // 2))
-        end_r = min(start_r + view_rows, dungeon.rows)
-        end_c = min(start_c + view_cols, dungeon.cols)
-=======
         sr = max(0, min(dungeon.rows - self.view_rows, hr - self.view_rows // 2))
         sc = max(0, min(dungeon.cols - self.view_cols, hc - self.view_cols // 2))
         er = sr + self.view_rows
         ec = sc + self.view_cols
->>>>>>> Stashed changes
 
         colors = {
             "wall":    (30, 30, 30),
             "hallway": (220, 220, 220),
-<<<<<<< Updated upstream
-            "door": (0, 128, 255),
-            "exit": (0, 255, 128)
-        }
-    #update varianles better
-        for r in range(start_r, end_r):
-            for c in range(start_c, end_c):
-=======
             "door":    (0, 128, 255),
             "exit":    (0, 255, 128),
         }
 
         for r in range(sr, er):
             for c in range(sc, ec):
->>>>>>> Stashed changes
                 cell = dungeon.maze[r][c]
                 sx = (c - sc) * self.cell_size
                 sy = (r - sr) * self.cell_size
                 rect = pygame.Rect(sx, sy, self.cell_size, self.cell_size)
 
-<<<<<<< Updated upstream
-                if not cell.explored:
-                    color = (0, 0, 0)
-                elif not cell.visible:
-                    base = base_colors.get(cell.cell_type, (100, 100, 100))
-                    color = tuple(int(x * 0.35) for x in base)
-                else:
-                    color = base_colors.get(cell.cell_type, (255, 0, 255))
-=======
                 now = pygame.time.get_ticks()
                 vision_on = (
                     game.vision_reveal_start and
@@ -231,50 +178,9 @@ class GameView:
                 else:
                     base = colors.get(cell.cell_type, (100, 100, 100))
                     col = tuple(int(x * 0.35) for x in base)
->>>>>>> Stashed changes
 
                 pygame.draw.rect(self.screen, col, rect)
 
-<<<<<<< Updated upstream
-                if r == hero_x and c == hero_y:
-                    pygame.draw.circle(self.screen, (255, 0, 0), rect.center, self.cell_size // 3)
-
-
-                aim_dx, aim_dy = game.aim_vector
-                center_x = (hero_y - start_c) * self.cell_size + self.cell_size // 2
-                center_y = (hero_x - start_r) * self.cell_size + self.cell_size // 2
-                end_x = int(center_x + aim_dx * 40)
-                end_y = int(center_y + aim_dy * 40)
-                pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
-
-                current_time = pygame.time.get_ticks()
-                if current_time - self.last_attack_time < self.attack_duration:
-                    style = game.hero.get_melee_style()
-                    attack_angle = math.atan2(aim_dy, aim_dx)
-                    color = style["color"]
-                    arc_width = style["arc_width"]
-                    reach = style["reach"]
-                    swings = style.get("swings", 1)
-
-                    for i in range(swings):
-                        offset = (-1 + 2 * i) * (arc_width / 2) if swings > 1 else 0
-                        angle = attack_angle + offset
-                        ax = int(center_x + reach * math.cos(angle))
-                        ay = int(center_y + reach * math.sin(angle))
-                        pygame.draw.line(self.screen, color, (center_x, center_y), (ax, ay), 4)
-
-    def draw_room(self, game, width, height,ogre,skeleton,gremlin):
-        room = game.active_room
-        view_rows = self.view_rows
-        view_cols = self.view_cols
-
-        hero_r, hero_c = room.get_hero_position()
-        monsters = room.get_monsters()
-        start_r = max(0, min(max(0, room.height - view_rows), hero_r - view_rows // 2))
-        start_c = max(0, min(max(0, room.width - view_cols), hero_c - view_cols // 2))
-        end_r = min(start_r + view_rows, room.height)
-        end_c = min(start_c + view_cols, room.width)
-=======
         # hero icon
         hrect = pygame.Rect((hc - sc) * self.cell_size,
                             (hr - sr) * self.cell_size,
@@ -329,81 +235,11 @@ class GameView:
 
         off_x = (W - rw * cell) // 2
         off_y = (H - rh * cell) // 2
->>>>>>> Stashed changes
 
         colors = {
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
             "door": (0, 128, 255),
-<<<<<<< Updated upstream
-            "Encapsulation": (255, 215, 0),
-            "Polymorphism": (255, 215, 0),
-            "Abstraction": (255, 215, 0),
-            "Inheritance": (255, 215, 0),
-            "Health Potion": (255, 192, 203),
-            "Vision Potion": (255, 192, 203)
-        }
-
-        room_tile_width = end_c - start_c
-        room_tile_height = end_r - start_r
-
-        cell_w = width // room_tile_width
-        cell_h = height // room_tile_height
-        cell_size = min(cell_w, cell_h)  # Make tiles square
-
-        # Draw tiles
-        for r in range(start_r, end_r):
-            for c in range(start_c, end_c):
-                tile = room.get_tile(r, c)
-                screen_x = (c - start_c) * cell_size
-                screen_y = (r - start_r) * cell_size
-                rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
-                color = base_colors.get(tile, (255, 0, 255))
-                pygame.draw.rect(self.screen, color, rect)
-
-        # Draw hero
-        center_x = (hero_c - start_c) * cell_size + cell_size // 2
-        center_y = (hero_r - start_r) * cell_size + cell_size // 2
-        pygame.draw.circle(self.screen, (255, 0, 0), (center_x, center_y), cell_size // 3)
-
-        # Draw aim direction
-        aim_dx, aim_dy = game.aim_vector
-        end_x = int(center_x + aim_dx * 40)
-        end_y = int(center_y + aim_dy * 40)
-        pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
-
-        for monster, (mr, mc) in monsters.items():
-            screen_x = (mc - start_c) * self.cell_size
-            screen_y = (mr - start_r) * self.cell_size
-
-            # Determine monster base color
-            if isinstance(monster, ogre):
-                base_color = (0, 250, 0)
-            elif isinstance(monster, skeleton):
-                base_color = (0, 0, 0)
-            elif isinstance(monster, gremlin):
-                base_color = (0, 0, 250)
-            else:
-                base_color = (255, 0, 255)  # fallback
-
-            pos = (screen_x + self.cell_size // 2, screen_y + self.cell_size // 2)
-
-            # Flashing outline if recently hit
-            if hasattr(monster, "is_flashing") and monster.is_flashing():
-                pygame.draw.circle(self.screen, (255, 0, 0), pos, self.cell_size // 2)  # red outer outline
-
-            pygame.draw.circle(self.screen, base_color, pos, self.cell_size // 3)  # inner color
-
-        current_time = pygame.time.get_ticks()
-        if current_time - self.last_attack_time < self.attack_duration:
-            style = game.hero.get_melee_style()
-            attack_angle = math.atan2(aim_dy, aim_dx)
-            color = style["color"]
-            arc_width = style["arc_width"]
-            reach = style["reach"]
-            swings = style.get("swings", 1)
-
-=======
             "pit": (0, 0, 0),          # black pits
             enc_sym: (255, 215, 0),
             poly_sym: (255, 215, 0),
@@ -466,7 +302,6 @@ class GameView:
             aw = st["arc_width"]
             swings = st.get("swings", 1)
             col = st["color"]
->>>>>>> Stashed changes
             for i in range(swings):
                 off = (-1 + 2 * i) * aw / 2 if swings > 1 else 0
                 a = ang + off
@@ -474,10 +309,6 @@ class GameView:
                 y2 = int(cy + reach * math.sin(a))
                 pygame.draw.line(self.screen, col, (cx, cy), (x2, y2), 4)
 
-<<<<<<< Updated upstream
-    def show_melee_attack(self):
-        self.last_attack_time = pygame.time.get_ticks()
-=======
         self.health_bar(W, H, hero)
         if self.show_inventory:
             self.draw_inventory(backpack)
@@ -546,4 +377,3 @@ class GameView:
             self.screen.blit(txt, txt.get_rect(
                 center=(self.screen.get_width() // 2, y)))
             y += 45
->>>>>>> Stashed changes

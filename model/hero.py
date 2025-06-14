@@ -4,15 +4,6 @@ from model.dungeon_character import DungeonCharacter
 
 
 class Hero(DungeonCharacter, ABC):
-<<<<<<< Updated upstream
-    def __init__(self, name, health_points, damage_min, damage_max, attack_speed, chance_to_hit):
-        super().__init__(name, health_points, damage_min, damage_max, attack_speed, chance_to_hit)
-        self._chance_to_block = 0.90
-        self._healing_potions = 0
-        self._vision_potions = 0
-        self._pillars_found = 0
-
-=======
     """
     Abstract base class for all heroes.
     Adds:
@@ -43,7 +34,6 @@ class Hero(DungeonCharacter, ABC):
         self._healing_potions   = 0
         self._vision_potions    = 0
         self._pillars_found     = 0
->>>>>>> Stashed changes
 
     # ─── Abstract combat interface ───────────────────────────────
     @abstractmethod
@@ -97,9 +87,6 @@ class Hero(DungeonCharacter, ABC):
         """Milliseconds between projectile shots."""
         raise NotImplementedError
 
-<<<<<<< Updated upstream
-
-=======
     @property
     @abstractmethod
     def projectile_speed(self) -> float:
@@ -111,7 +98,6 @@ class Hero(DungeonCharacter, ABC):
     def projectile_damage(self) -> int:
         """Damage dealt per projectile."""
         raise NotImplementedError
->>>>>>> Stashed changes
 
     # ─── Pillar tracking ─────────────────────────────────────────
     @property

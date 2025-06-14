@@ -1,27 +1,20 @@
 import pygame
-<<<<<<< Updated upstream
-=======
 import random
 import math
->>>>>>> Stashed changes
 
 from model.dungeon import Dungeon
 from model.Priestess import Priestess
 from model.warrior import Warrior
 from model.Thief import Thief
-from model.MonsterFactory import MonsterFactory
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
 from model.Ogre import Ogre
 from model.room import Room
-import random
+from model.projectile import Projectile
+from model.backpack import BackPack
+
 
 class DungeonAdventure:
-<<<<<<< Updated upstream
-    def __init__(self):
-        self.dungeon = Dungeon(difficulty=Room._current_difficulty)
-        self.hero = Priestess("Rudy")
-=======
     """
     Central controller that manages hero, monsters, projectiles, rooms,
     pit deaths, respawns, and a 3-life system.
@@ -35,7 +28,6 @@ class DungeonAdventure:
         self.my_back_pack = BackPack()
 
         # Context flags
->>>>>>> Stashed changes
         self.in_room = False
         self.active_room = None
         self.game_over = False
@@ -45,9 +37,6 @@ class DungeonAdventure:
 
         # Aiming & ranged
         self.aim_vector = (1, 0)
-<<<<<<< Updated upstream
-        self.monster_last_move_time = 0
-=======
         self._projectiles = []
         self.last_projectile_time = 0
 
@@ -63,7 +52,6 @@ class DungeonAdventure:
         # Vision potion
         self.vision_reveal_start = None
         self.vision_reveal_duration = 3_000
->>>>>>> Stashed changes
 
     # ─────────────────────── hero move ────────────────────────────
     def move_hero(self, dx: int, dy: int):
@@ -73,19 +61,6 @@ class DungeonAdventure:
         """
         # Inside room
         if self.dungeon.in_room:
-<<<<<<< Updated upstream
-            status = self.dungeon.active_room.move_hero_in_room(dx, dy)
-            if status == "exit":
-                self.dungeon.in_room = False
-                self.dungeon.active_room = None
-                self.in_room = False
-                self.active_room = None
-        else:
-            self.dungeon.move_hero(dx, dy)
-            if self.dungeon.in_room:
-                self.in_room = True
-                self.active_room = self.dungeon.active_room
-=======
             outcome = self.dungeon.active_room.move_hero_in_room(
                 dx, dy, self.my_back_pack
             )
@@ -97,7 +72,6 @@ class DungeonAdventure:
                 self._leave_room()
                 return "exit"
             return outcome
->>>>>>> Stashed changes
 
         # In maze
         self.dungeon.move_hero(dx, dy)
@@ -113,29 +87,6 @@ class DungeonAdventure:
         self.lives_remaining -= 1
         print(f"❗ Life lost! Lives remaining: {self.lives_remaining}")
 
-<<<<<<< Updated upstream
-            if abs(dx) > abs(dy):
-                target_r = hero_r
-                target_c = hero_c + (1 if dx > 0 else -1)
-            else:
-                target_r = hero_r + (1 if dy > 0 else -1)
-                target_c = hero_c
-
-            monster = self.active_room.get_monster_at(target_r, target_c)
-            if monster:
-                print(f"🗡️ Rudy attacks {monster.name} at ({target_r}, {target_c})")
-                self.hero.attack(monster)
-                monster.flash_hit()
-                print(f"🧟 {monster.name} HP after attack: {monster.health_points}")
-                if not monster.is_alive():
-                    print(f"💀 {monster.name} has died and is removed from the room.")
-                    del self.active_room.monsters[monster]
-
-    def exit_room(self):
-        self.in_room = False
-        self.dungeon.in_room = False
-        self.active_room = None
-=======
         if self.lives_remaining <= 0:
             self.game_over = True
             print("💀 No lives left — game over.")
@@ -266,4 +217,3 @@ class DungeonAdventure:
     def get_hero(self):       return self.hero
     def get_backpack(self):   return self.my_back_pack
     def get_lives(self):      return self.lives_remaining
->>>>>>> Stashed changes

@@ -12,19 +12,48 @@ class Thief(Hero):
         chance_to_hit = 0.8
         super().__init__(name,health_points, damage_min, damage_max, attack_speed, chance_to_hit)
 
-    def attack(self, target):
-        print(f"{self.name} performs a quick dual stab!")
-        for i in range(2):
-            if random.random() < self.chance_to_hit:
-                damage = random.randint(self.damage_min, self.damage_max)
-                print(f"  Hit {i + 1}: {damage} damage.")
-                target.take_damage(damage)
-            else:
-                print(f"  Hit {i + 1}: missed!")
+    def attack(self, target, damage=None):
+        if damage is not None:
+            # Projectile logic — single fast hit
+            print(f"{self.name} hurls a throwing knife for {damage} damage.")
+            target.take_damage(damage)
+        else:
+            # Melee logic — dual stab with hit chance
+            print(f"{self.name} performs a quick dual stab!")
+            for i in range(2):
+                if random.random() < self.chance_to_hit:
+                    dmg = random.randint(self.damage_min, self.damage_max)
+                    print(f"  Hit {i + 1}: {dmg} damage.")
+                    target.take_damage(dmg)
+                else:
+                    print(f"  Hit {i + 1}: missed!")
 
-#Thief special skill goes here
+    @property
+    def projectile_cooldown(self):
+        return 300
+
+    @property
+    def projectile_speed(self):
+        return 12
+
+    @property
+    def projectile_damage(self):
+        return 10
+
     def special_skill(self, target):
-        pass
+        roll = random.random()
+        if roll < 0.4:
+            # Successful surprise — gets two hits
+            print(f"{self.name} performs a surprise double strike!")
+            self.attack(target)
+            self.attack(target)
+        elif roll < 0.6:
+            # Caught — no attack
+            print(f"{self.name}'s surprise attack failed! They were caught off guard.")
+        else:
+            # Normal attack
+            print(f"{self.name} performs a surprise attack (normal hit).")
+            self.attack(target)
 
     def get_melee_style(self):
         return {
