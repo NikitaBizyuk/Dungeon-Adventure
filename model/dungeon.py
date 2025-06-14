@@ -149,6 +149,7 @@ class Dungeon:
                     self.update_visibility()
                     if target.cell_type == "door":
                         room = self.rooms[target.door_id]
+                        room.enter(self)
                         self.in_room = True
                         self.active_room = room
                         print(f"Entered room at door {target.door_id}")

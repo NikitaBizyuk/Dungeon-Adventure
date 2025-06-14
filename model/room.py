@@ -66,26 +66,47 @@ class Room:
         occupied = set(self.monsters.values())
         occupied.add((self.hero_r, self.hero_c))
 
+        # Difficulty level affects aggressiveness
+        difficulty = Room._current_difficulty
+        jitter_chance = {
+            "easy": 0.6,
+            "medium": 0.4,
+            "hard": 0.2
+        }[difficulty]
+
         for monster in list(self.monsters.keys()):
             r, c = self.monsters[monster]
+
+            # Add random jitter to reduce clumping
+            jitter = [(-1, 0), (1, 0), (0, -1), (0, 1), (0, 0)]
+            random.shuffle(jitter)
+
+            # Greedy direction toward hero
             dr = 1 if r < self.hero_r else -1 if r > self.hero_r else 0
             dc = 1 if c < self.hero_c else -1 if c > self.hero_c else 0
-            new_r = r + dr
-            new_c = c + dc
 
-            if random.randint(1, 100) % 7 == 0: new_r += 1
-            if random.randint(1, 100) % 9 == 0: new_r += 1
-            if random.randint(1, 100) % 4 == 0: new_c += 1
-            if random.randint(1, 100) % 9 == 0: new_c += 1
+            best_pos = (r, c)
+            best_dist = abs(r - self.hero_r) + abs(c - self.hero_c)
 
-            if (0 <= new_r < self.height and 0 <= new_c < self.width and
-                    self.grid[new_r][new_c] in ["floor", "door"] and
-                    (new_r, new_c) not in occupied):
-                new_positions[monster] = (new_r, new_c)
-                occupied.add((new_r, new_c))
-            else:
-                new_positions[monster] = (r, c)
-                occupied.add((r, c))
+            for jdr, jdc in jitter:
+                # Apply jitter based on difficulty
+                if random.random() < jitter_chance:
+                    jdr = random.choice([-1, 0, 1])
+                    jdc = random.choice([-1, 0, 1])
+
+                nr = r + dr + jdr
+                nc = c + dc + jdc
+
+                if (0 <= nr < self.height and 0 <= nc < self.width and
+                        self.grid[nr][nc] in ["floor", "door"] and
+                        (nr, nc) not in occupied):
+                    dist = abs(nr - self.hero_r) + abs(nc - self.hero_c)
+                    if dist < best_dist:
+                        best_pos = (nr, nc)
+                        best_dist = dist
+
+            new_positions[monster] = best_pos
+            occupied.add(best_pos)
 
         self.monsters = new_positions
 
@@ -107,6 +128,39 @@ class Room:
                 self.grid[nr][nc] = "floor"
                 print("my back pack has",back_pack.to_string())
         return None
+
+    def enter(self, hero):
+        """Place hero at door and move monsters away from spawn point."""
+        self.hero_r = self.door_r - 1
+        self.hero_c = self.door_c
+
+        # Define the danger zone (near the door)
+        spawn_area = {
+            (self.hero_r + dx, self.hero_c + dy)
+            for dx in range(-2, 3)
+            for dy in range(-2, 3)
+            if 0 <= self.hero_r + dx < self.height and 0 <= self.hero_c + dy < self.width
+        }
+
+        # Find valid positions away from spawn zone
+        safe_positions = [
+            (r, c)
+            for r in range(1, self.height - 1)
+            for c in range(1, self.width - 1)
+            if self.grid[r][c] in {"floor", "door"} and (r, c) not in spawn_area
+        ]
+        random.shuffle(safe_positions)
+
+        # Reassign monster positions if they're in the danger zone
+        new_monsters = {}
+        for monster in self.monsters:
+            current_pos = self.monsters[monster]
+            if current_pos in spawn_area and safe_positions:
+                new_monsters[monster] = safe_positions.pop()
+            else:
+                new_monsters[monster] = current_pos
+
+        self.monsters = new_monsters
 
     # ───── Accessors ─────
     def get_tile(self, r, c):

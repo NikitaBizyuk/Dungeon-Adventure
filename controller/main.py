@@ -82,6 +82,9 @@ def main():
                 elif state == "pause_menu":
                     state = "main_menu"
                     pause_state = False
+                elif state == "playing":
+                    state = "pause_menu"
+                    pause_state = True
 
             elif state == "main_menu":
                 for button in view.menu_buttons:
@@ -131,7 +134,8 @@ def main():
                         else:
                             view.display_message("❌ Enter a valid name", 1500)
 
-                    elif hasattr(view, "edit_rect") and view.edit_rect.collidepoint(event.pos):
+
+                    elif hasattr(view, "edit_rect") and view.edit_rect and view.edit_rect.collidepoint(event.pos):
                         typing_name = True
                         confirmed_name = False
                         view.display_message("✏️ Edit your name", 1500)
