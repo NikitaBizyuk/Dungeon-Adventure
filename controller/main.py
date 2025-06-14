@@ -293,7 +293,7 @@ def main() -> None:
                 status = f"Special: Active ({left:.1f}s)"
             elif now - game.last_special_used < game.special_cooldown:
                 cd = (game.special_cooldown - (now - game.last_special_used)) / 1000
-                status = f"Special: Cooling Down ({cd:.1f}s)"
+                status = f"Special: Cooling Down ({cd:.1f}s)W"
             else:
                 status = "Special: Ready"
 
