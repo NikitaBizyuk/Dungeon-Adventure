@@ -11,6 +11,7 @@ from model.room import Room
 from model.projectile import Projectile
 from model.backpack import BackPack
 import random
+from view.game_view import GameView
 
 class DungeonAdventure:
     def __init__(self):
@@ -29,10 +30,10 @@ class DungeonAdventure:
         self.last_special_used = -9999
         self.vision_reveal_start = None
         self.vision_reveal_duration = 3000
-
-    def move_hero(self, dx, dy):
+        self.view = GameView
+    def move_hero(self, dx, dy,view):
         if self.dungeon.in_room:
-            status = self.dungeon.active_room.move_hero_in_room(dx, dy, self.my_back_pack)
+            status = self.dungeon.active_room.move_hero_in_room(dx, dy, self.my_back_pack,view)
             if status == "exit":
                 self.dungeon.in_room = False
                 self.dungeon.active_room = None

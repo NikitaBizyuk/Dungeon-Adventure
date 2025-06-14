@@ -89,7 +89,7 @@ class Room:
 
         self.monsters = new_positions
 
-    def move_hero_in_room(self, dx, dy, back_pack):
+    def move_hero_in_room(self, dx, dy, back_pack,view):
         nr = self.hero_r + dx
         nc = self.hero_c + dy
 
@@ -103,7 +103,7 @@ class Room:
                 if target == "door":
                     return "exit"
             if target in ["A","E","I","P","Health Potion", "Vision Potion"]:
-                back_pack.add(target)
+                back_pack.add(target,view)
                 self.grid[nr][nc] = "floor"
                 print("my back pack has",back_pack.to_string())
         return None

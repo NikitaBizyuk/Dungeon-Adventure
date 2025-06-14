@@ -139,8 +139,6 @@ def main():
                             raw_vector = pygame.math.Vector2(dx / length, dy / length)
                             smoothed = pygame.math.Vector2(game.aim_vector).lerp(raw_vector, 0.1)
                             game.aim_vector = (smoothed.x, smoothed.y)
-                    elif game.get_backpack().found_all_pillars():
-                        view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!", 3000)
 
             elif state == "pause_menu":
                 for button in view.pause_buttons:
@@ -197,7 +195,7 @@ def main():
                 if dx != 0 or dy != 0:
                     current_time = pygame.time.get_ticks()
                     if current_time - hero_last_move_time >= hero_move_delay:
-                        game.move_hero(dx, dy)
+                        game.move_hero(dx, dy,view)
                         hero_last_move_time = current_time
 
             if game.in_room:

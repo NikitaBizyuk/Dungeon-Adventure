@@ -11,7 +11,7 @@ class BackPack:
         self.polymorphism = 0
         self.pillar_cntr = 0
 
-    def add(self,name,view=None):
+    def add(self,name,view):
         self.inventory.append(name)
         if name in {"A", "E", "I", "P"}:
             if name == "A":
@@ -23,12 +23,19 @@ class BackPack:
             else:
                 self.polymorphism += 1
             self.pillar_cntr = self.pillar_cntr + 1
+            view.display_message(f"You found Pillar {self.pillar_cntr}/4", 2500)
             if view:
-                view.display_message(f"You found Pillar {self.pillar_cntr}/4", 2500)
+                pass
         if name == "Vision Potion":
             self.vision_cntr = self.vision_cntr + 1
+            view.display_message(f"You found A Vision Potion ", 2500)
         if name == "Health Potion":
             self.healing_cntr = self.healing_cntr + 1
+            if self.pillar_cntr < 4:
+                view.display_message(f"You found A Healing Potion ", 2500)
+            else:
+                view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!\n"
+                                          " Find the exit to win the game!", 3000)
     def get_inventory(self):
         return self.inventory
     def get_healing_cntr(self):

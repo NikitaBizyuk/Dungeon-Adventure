@@ -56,14 +56,32 @@ class GameView:
     def display_message(self, message, duration=2000):
         self.message = message
         self.message_start_time = pygame.time.get_ticks()
-
         self.message_duration = duration
 
     def draw_message(self):
         if self.message and pygame.time.get_ticks() - self.message_start_time < self.message_duration:
-            font = pygame.font.Font(None, 36)
-            rendered = font.render(self.message, True, (255, 255, 0))
-            self.screen.blit(rendered, (30, 60))  # adjust position as needed
+            font = pygame.font.SysFont("georgia", 48, bold=True)
+            lines = self.message.split('\n')  # Split the message on \n
+            line_height = font.get_height() + 10
+
+            total_height = len(lines) * line_height
+            start_y = (self.screen.get_height() - total_height) // 2
+
+            # Get the widest line to size the background box
+            max_width = max(font.size(line)[0] for line in lines)
+            box_width = max_width + 40
+            box_height = total_height + 20
+
+            box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
+            box_surface.fill((0, 0, 0, 180))  # Semi-transparent black
+            box_rect = box_surface.get_rect(center=(self.screen.get_width() // 2, self.screen.get_height() // 2))
+            self.screen.blit(box_surface, box_rect)
+
+            # Draw each line of text centered
+            for i, line in enumerate(lines):
+                text_surface = font.render(line, True, (255, 215, 0))  # Gold
+                text_rect = text_surface.get_rect(center=(self.screen.get_width() // 2, start_y + i * line_height))
+                self.screen.blit(text_surface, text_rect)
         else:
             self.message = ""
 
