@@ -43,6 +43,7 @@ def main():
     typing_name = True
     name_max_length = 12
     confirmed_name = False
+    dead_start = None
 
     pending_difficulty: str | None = None
 
@@ -261,6 +262,11 @@ def main():
                     if current_time - hero_last_move_time >= hero_move_delay:
                         game.move_hero(dx, dy)
                         hero_last_move_time = current_time
+                if game.game_over:
+                    view.display_message("💀 Game Over: No lives left!", 3000)
+                    dead_start = pygame.time.get_ticks()
+                    state = "dead"
+                    continue
 
             if game.in_room:
                 view.draw_room(game, WIDTH, HEIGHT, game.get_hero(), game.get_backpack(), Ogre, Skeleton, Gremlin,
@@ -282,7 +288,27 @@ def main():
             else:
                 status = "Special: Ready"
 
+            status = f"Lives: {game.get_lives()}   |   {status}"
             view.draw_status_bar(screen, status)
+
+        elif state == "dead":
+            # draw Game-Over screen
+            font_big   = pygame.font.Font(None, 120)
+            font_small = pygame.font.Font(None,  50)
+
+            txt = font_big.render("GAME OVER", True, (220, 20, 20))
+            sub = font_small.render("Returning to main menu...", True, (255, 255, 255))
+
+            screen.blit(txt, txt.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 40)))
+            screen.blit(sub, sub.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 40)))
+
+            # after 3 s, return to main menu
+            if dead_start and pygame.time.get_ticks() - dead_start > 3000:
+                state = "main_menu"
+                pause_state = False
+                game = None
+                dead_start = None
+                view.message = ""  # clear any lingering HUD message
 
         pygame.display.flip()
         clock.tick(60)

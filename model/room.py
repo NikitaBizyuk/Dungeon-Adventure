@@ -12,6 +12,12 @@ class Room:
         "medium": (4, 7),
         "hard": (8, 10),
     }
+    _DIFFICULTY_TO_PIT = {
+        "easy":   (0.15, (0, 1)),
+        "medium": (0.45, (1, 2)),
+        "hard":   (0.75, (2, 3)),
+    }
+
     _current_difficulty = "medium"
 
     @classmethod
@@ -19,9 +25,9 @@ class Room:
         """Sets monster spawn difficulty for all future rooms."""
         cls._current_difficulty = level if level in cls._DIFFICULTY_TO_RANGE else "medium"
 
-    # ───── Room Initialization ─────
-    def __init__(self, door_r, door_c, width=25, height=15):
-        self.width = width
+    # ──────────────────────────────────────────────────────────────
+    def __init__(self, door_r: int, door_c: int, width: int = 25, height: int = 15):
+        self.width  = width
         self.height = height
         self.grid = [["wall" for _ in range(width)] for _ in range(height)]
         self.hero_r = height - 2
@@ -30,7 +36,8 @@ class Room:
         self.door_c = width // 2
         self.is_trap = random.random() < 0.1
         self._carve_layout()
-
+        self._spawn_pits()
+        self._spawn_monsters()
         # Difficulty-based monster range
         low, high = Room._DIFFICULTY_TO_RANGE[Room._current_difficulty]
         self.num_monsters = random.randint(low, high)
@@ -61,6 +68,42 @@ class Room:
         self.grid[self.door_r][self.door_c] = "door"
         self.grid[self.hero_r][self.hero_c] = "floor"
 
+    # ──────────────────────────────────────────────────────────────
+    def _spawn_pits(self):
+        prob, (min_p, max_p) = Room._DIFFICULTY_TO_PIT[Room._current_difficulty]
+        if random.random() > prob:
+            return
+
+        target = random.randint(min_p, max_p)
+        placed = 0
+        attempts = 0
+        while placed < target and attempts < target * 25:
+            attempts += 1
+            r = random.randint(1, self.height - 2)
+            c = random.randint(1, self.width  - 2)
+            if self.grid[r][c] != "floor":
+                continue
+            if (r, c) in [(self.hero_r, self.hero_c), (self.door_r, self.door_c)]:
+                continue
+            self.grid[r][c] = "pit"
+            placed += 1
+
+    # ──────────────────────────────────────────────────────────────
+    def _spawn_monsters(self):
+        low, high = Room._DIFFICULTY_TO_RANGE[Room._current_difficulty]
+        target = random.randint(low, high)
+        self.monsters = {}
+        attempts = 0
+        while len(self.monsters) < target and attempts < target * 25:
+            attempts += 1
+            r = random.randint(1, self.height - 2)
+            c = random.randint(1, self.width  - 2)
+            if self.grid[r][c] != "floor":
+                continue
+            monster = MonsterFactory.create_random_monster()
+            self.monsters[monster] = (r, c)
+
+    # ──────────────────────────────────────────────────────────────
     def move_monsters(self):
         new_positions = {}
         occupied = set(self.monsters.values())

@@ -17,30 +17,36 @@ class GameView:
 
         self.font = pygame.font.Font(None, 60)
 
-        # Menus
+        # menus
         self.menu_buttons = self.create_menu_buttons()
-        self.difficulty_buttons = self.create_difficulty_buttons()
-        self.hero_buttons = self.create_hero_buttons()
+        self.difficulty_buttons = self._create_difficulty_buttons()
+        self.hero_buttons = self._create_hero_buttons()
+        self.pause_buttons = self._create_pause_menu_buttons()
 
-        # Inventory / messages
+        # inventory pop-up & transient messages
         self.show_inventory = False
         self.message = ""
         self.message_start_time = 0
         self.message_duration = 0
 
-        image_path = os.path.join(
+        # menu background
+        img_path = os.path.join(
             os.path.dirname(__file__), "..", "assets", "DungeonBackground.png"
         )
         self.menu_bg = pygame.transform.scale(
-            pygame.image.load(image_path).convert(), self.screen.get_size()
+            pygame.image.load(img_path).convert(), self.screen.get_size()
         )
 
-        self.pause_buttons = self.create_pause_menu_buttons()
+        self.pause_buttons = self._create_pause_menu_buttons()
         self.edit_rect = None
 
     # ───────────────────────── Button factories ──────────────────────
     def create_menu_buttons(self):
         w, h = self.screen.get_size()
+        mk = lambda txt, y: Button(
+            txt, pygame.Rect(w // 2 - 100, y, 200, 60),
+            self.font, (200, 200, 200), (255, 255, 0)
+        )
         return [
             Button(
                 "PLAY",
@@ -72,7 +78,7 @@ class GameView:
             ),
         ]
 
-    def create_difficulty_buttons(self):
+    def _create_difficulty_buttons(self):
         w, h = self.screen.get_size()
         return [
             Button("EASY", pygame.Rect(w // 2 - 100, h // 2 - 100, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
@@ -80,7 +86,7 @@ class GameView:
             Button("HARD", pygame.Rect(w // 2 - 100, h // 2 + 100, 200, 60), self.font, (200, 200, 200), (255, 0, 0)),
         ]
 
-    def create_hero_buttons(self):
+    def _create_hero_buttons(self):
         w, h = self.screen.get_size()
         return [
             Button("WARRIOR", pygame.Rect(w // 2 - 150, h // 2 - 120, 300, 60), self.font, (200, 200, 200), (255, 255, 0)),
@@ -88,7 +94,7 @@ class GameView:
             Button("THIEF", pygame.Rect(w // 2 - 150, h // 2 + 40, 300, 60), self.font, (200, 200, 200), (255, 165, 0)),
         ]
 
-    def create_pause_menu_buttons(self):
+    def _create_pause_menu_buttons(self):
         w, h = self.screen.get_size()
         return [
             Button("RESUME", pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60), self.font, (200, 200, 200), (0, 255, 0)),
@@ -139,7 +145,7 @@ class GameView:
         self.message_start_time = pygame.time.get_ticks()
         self.message_duration = duration
 
-    def draw_message(self) -> None:
+    def draw_message(self):
         if (
             self.message
             and pygame.time.get_ticks() - self.message_start_time < self.message_duration
@@ -299,6 +305,7 @@ class GameView:
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
             "door": (0, 128, 255),
+            "pit": (0, 0, 0),  # black pits
             pillar_1: (255, 215, 0),
             pillar_2: (255, 215, 0),
             pillar_3: (255, 215, 0),
@@ -442,7 +449,7 @@ class GameView:
             self.screen.blit(item_text, (inv_rect.x + 20, inv_rect.y + 40 + idx * 25))
 
     def draw_about_screen(self):
-        self.screen.fill((0, 0, 0))
+        self.screen.fill((15, 15, 15))
 
         lines = [
             "Dungeon Adventure Game",
@@ -474,32 +481,28 @@ class GameView:
             "Press ESC to return to the previous menu.",
         ]
 
-        screen_height = self.screen.get_height()
-        screen_width = self.screen.get_width()
-
-        # Dynamically calculate line height and font size to fit all lines
-        max_content_height = screen_height - 100  # margin from top/bottom
+        screen_height, screen_width = self.screen.get_height(), self.screen.get_width()
+        max_content_height = screen_height - 100
         line_height = max_content_height // len(lines)
-        font_size = min(32, line_height - 4)  # cap at 32pt for readability
+        font_size = min(32, line_height - 4)
 
         font = pygame.font.SysFont("georgia", font_size, bold=True)
         bright_brown = (210, 140, 70)
 
-        # Box dimensions
         padding = 20
         box_width = screen_width - 160
         box_height = len(lines) * line_height + padding
         box_x = 80
-        box_y = (screen_height - box_height) // 2  # center vertically
+        box_y = (screen_height - box_height) // 2
 
-        pygame.draw.rect(self.screen, (30, 30, 30), (box_x, box_y, box_width, box_height))
+        pygame.draw.rect(self.screen, (25, 25, 25), (box_x, box_y, box_width, box_height))
         pygame.draw.rect(self.screen, bright_brown, (box_x, box_y, box_width, box_height), 4)
 
-        # Draw text centered inside box
         y_offset = box_y + padding // 2
         for line in lines:
             text = font.render(line, True, bright_brown)
             text_rect = text.get_rect(center=(screen_width // 2, y_offset))
             self.screen.blit(text, text_rect)
             y_offset += line_height
+
 
