@@ -14,7 +14,7 @@ import random
 from view.game_view import GameView
 
 class DungeonAdventure:
-    def __init__(self):
+    def __init__(self,view):
         self.dungeon = Dungeon(difficulty=Room._current_difficulty)
         self.hero = Warrior("Rudy")
         self.my_back_pack = BackPack()
@@ -30,7 +30,9 @@ class DungeonAdventure:
         self.last_special_used = -9999
         self.vision_reveal_start = None
         self.vision_reveal_duration = 3000
-        self.view = GameView
+        self.view = view
+        self.hero_r = ""
+        self.hero_c = ""
     def move_hero(self, dx, dy,view):
         if self.dungeon.in_room:
             status = self.dungeon.active_room.move_hero_in_room(dx, dy, self.my_back_pack,view)
@@ -41,6 +43,20 @@ class DungeonAdventure:
                 self.active_room = None
         else:
             self.dungeon.move_hero(dx, dy)
+            cell = self.dungeon.maze[self.dungeon.hero_x][self.dungeon.hero_y]
+            print("cell:", cell.cell_type, "| pillars:", self.my_back_pack.pillar_cntr)
+            if cell.cell_type == "exit" and self.my_back_pack.pillar_cntr == 4:
+                self.view.display_message("🏆 You escaped the dungeon!\nAll 4 Pillars Found!", 4000)
+
+                # Force redraw cycle before quitting
+                frames_to_show = 60  # show message for 1 second (60 frames at 60 FPS)
+                for _ in range(frames_to_show):
+                    self.view.draw_maze(self, pygame.display.get_surface().get_width(),
+                                        pygame.display.get_surface().get_height(), self.get_hero(), self.get_backpack())
+                    pygame.display.flip()
+                    pygame.time.delay(16)  # ~60 FPS
+
+                return "win"
             if self.dungeon.in_room:
                 self.in_room = True
                 self.active_room = self.dungeon.active_room

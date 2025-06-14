@@ -5,7 +5,7 @@ from model.OOPillars import OOPillars
 class Room:
     # ───── Static class-level values ─────
     room_ID = 0
-    loot = ["A", "E", "I","P", "Health Potion", "Vision Potion"]
+    #loot = ["A", "E", "I","P", "Health Potion", "Vision Potion"]
 
     _DIFFICULTY_TO_RANGE = {
         "easy": (1, 3),
@@ -43,23 +43,43 @@ class Room:
             for _ in range(self.num_monsters)
         }
 
-        random.shuffle(Room.loot)
+        #random.shuffle(Room.loot)
         Room.room_ID += 1
 
-    # ───── Layout + Movement ─────
-    def _carve_layout(self):
-        for r in range(1, self.height - 1):
-            for c in range(1, self.width - 1):
-                if r == (self.height - 1) / 2 and c == (self.width - 1) / 2:
-                    random.shuffle(self.loot)
-                    self.grid[r][c] = Room.loot[0]
-                    if Room.loot[0] in {"A", "E", "I", "P"}:
-                        Room.loot.pop(0)
-                else:
-                    self.grid[r][c] = "floor"
+    def place_item(self, item_symbol):
+        empty_tiles = [
+            (r, c)
+            for r in range(1, self.height - 1)
+            for c in range(1, self.width - 1)
+            if self.grid[r][c] == "floor"
+        ]
+        if empty_tiles:
+            r, c = random.choice(empty_tiles)
+            self.grid[r][c] = item_symbol
 
-        self.grid[self.door_r][self.door_c] = "door"
-        self.grid[self.hero_r][self.hero_c] = "floor"
+    def _carve_layout(self):
+         for r in range(1, self.height - 1):
+            for c in range(1, self.width - 1):
+     #             if r == (self.height - 1) / 2 and c == (self.width - 1) / 2:
+    #                 random.shuffle(self.loot)
+                     self.grid[r][c] = "floor"
+    #                 if Room.loot[0] in {"A", "E", "I", "P"}:
+    #                     Room.loot.pop(0)
+    #             else:
+    #                 self.grid[r][c] = "floor"
+    #
+            self.grid[self.door_r][self.door_c] = "door"
+            self.grid[self.hero_r][self.hero_c] = "floor"
+
+    def place_random_loot(self):
+        loot_candidates = []
+        if random.random() < 0.6:  # 60% chance to place health potion
+            loot_candidates.append("Health Potion")
+        if random.random() < 0.5:  # 50% chance to place vision potion
+            loot_candidates.append("Vision Potion")
+
+        for item in loot_candidates:
+            self.place_item(item)
 
     def move_monsters(self):
         new_positions = {}

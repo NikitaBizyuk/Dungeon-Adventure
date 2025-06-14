@@ -1,6 +1,7 @@
 import random
 from model.room import Room
 from model.maze_cell import MazeCell
+from model.OOPillars import OOPillars
 
 class Dungeon:
     def __init__(self, difficulty="medium"):
@@ -27,11 +28,40 @@ class Dungeon:
         self.room_templates = self._define_room_templates()
         self.room_centers = []
 
-        self._generate_handcrafted_layout()
-        self._place_doors()
+        #self._generate_handcrafted_layout()
+        max_retries = 5
+        for attempt in range(max_retries):
+            self.maze = [[MazeCell(r, c) for c in range(self.cols)] for r in range(self.rows)]
+            self.rooms = {}
+            self.room_centers = []
+
+            self._generate_handcrafted_layout()
+            self._place_doors()
+
+            if len(self.rooms) >= 4:
+                break
+        else:
+            raise Exception(f"Failed to generate at least 4 rooms after {max_retries} attempts.")
+
+        if len(self.rooms) < 4:
+            raise Exception(f"Not enough rooms generated! Only {len(self.rooms)}. Need at least 4 for all Pillars.")
         self._place_exit()
         self._place_hero_start()
         self.update_visibility()
+        pillar_symbols = [
+            OOPillars.ABSTRACTION.symbol,
+            OOPillars.ENCAPSULATION.symbol,
+            OOPillars.INHERITANCE.symbol,
+            OOPillars.POLYMORPHISM.symbol
+        ]
+
+        # Select 4 unique room objects
+        room_list = list(self.rooms.values())
+        if len(room_list) >= 4:
+            selected_rooms = random.sample(room_list, 4)
+
+            for room, symbol in zip(selected_rooms, pillar_symbols):
+                room.place_item(symbol)  # Requires method below
 
     def _define_room_templates(self):
         return [
@@ -112,6 +142,7 @@ class Dungeon:
                     self.maze[nr][nc].cell_type = "door"
                     self.maze[nr][nc].door_id = door_id
                     self.rooms[door_id] = Room(nr, nc)
+                    self.rooms[door_id].place_random_loot()
                     door_id += 1
                     break
 

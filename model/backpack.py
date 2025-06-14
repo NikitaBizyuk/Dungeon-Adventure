@@ -23,9 +23,11 @@ class BackPack:
             else:
                 self.polymorphism += 1
             self.pillar_cntr = self.pillar_cntr + 1
-            view.display_message(f"You found Pillar {self.pillar_cntr}/4", 2500)
-            if view:
-                pass
+            if self.pillar_cntr < 4:
+                view.display_message(f"You found Pillar {self.pillar_cntr}/4", 2500)
+            else:
+                view.display_message("🎉 Congrats! You found all 4 Pillars of OOP!\n🏁 Find the exit to win the game!",
+                                     3000)
         if name == "Vision Potion":
             self.vision_cntr = self.vision_cntr + 1
             view.display_message(f"You found A Vision Potion ", 2500)

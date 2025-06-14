@@ -83,7 +83,7 @@ def main():
                     if button.is_clicked(event):
                         difficulty = button.text.lower()
                         Room.set_difficulty(difficulty)
-                        game = DungeonAdventure()
+                        game = DungeonAdventure(view)
                         print(f"Started game on {difficulty.upper()}")
                         state = "playing"
 
@@ -195,7 +195,11 @@ def main():
                 if dx != 0 or dy != 0:
                     current_time = pygame.time.get_ticks()
                     if current_time - hero_last_move_time >= hero_move_delay:
-                        game.move_hero(dx, dy,view)
+                        result = game.move_hero(dx, dy, view)
+                        if result == "win":
+                            state = "main_menu"
+                            continue
+
                         hero_last_move_time = current_time
 
             if game.in_room:
