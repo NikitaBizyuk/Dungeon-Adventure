@@ -98,7 +98,7 @@ cython_debug/
 # =======================================
 # SQLite / local data files
 # =======================================
-*.db
+
 *.sqlite3
 *.sqlite3-journal
 

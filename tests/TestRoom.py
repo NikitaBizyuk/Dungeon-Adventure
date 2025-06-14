@@ -6,7 +6,7 @@ from model.Room import Room
 class MockBackPack:
     def __init__(self):
         self.items = set()
-    def add(self, item):
+    def add(self, item, view=None):  # Accept `view` but ignore it
         self.items.add(item)
     def to_string(self):
         return ", ".join(sorted(self.items))

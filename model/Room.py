@@ -30,6 +30,7 @@ class Room:
         self.door_c = width // 2
         self.is_trap = random.random() < 0.1
         self._carve_layout()
+        self.place_random_pits()
 
         # Difficulty-based monster range
         low, high = Room._DIFFICULTY_TO_RANGE[Room._current_difficulty]
@@ -109,7 +110,7 @@ class Room:
 
         self.monsters = new_positions
 
-    def move_hero_in_room(self, dx, dy, back_pack,view):
+    def move_hero_in_room(self, dx, dy, back_pack, view=None):
         nr = self.hero_r + dx
         nc = self.hero_c + dy
 
@@ -117,11 +118,16 @@ class Room:
             target = self.grid[nr][nc]
             if any((nr, nc) == (mr, mc) for (mr, mc) in self.monsters.values()):
                 return None
-            if target in ["floor", "door","A","E","I","P","Health Potion","Vision Potion"]:
+            if target in ["floor", "door", "A", "E", "I", "P", "Health Potion", "Vision Potion"]:
                 self.hero_r = nr
                 self.hero_c = nc
                 if target == "door":
                     return "exit"
+            elif target == "pit":
+                self.hero_r = nr
+                self.hero_c = nc
+                print("💥 You fell into a pit!")
+                return "pit"
             if target in ["A","E","I","P","Health Potion", "Vision Potion"]:
                 back_pack.add(target,view)
                 self.grid[nr][nc] = "floor"
@@ -177,25 +183,32 @@ class Room:
                 return monster
         return None
 
-    #
-    # def toString(self):
-    #     result = ""
-    #     for r in range(15):
-    #         for c in range(100):
-    #             # Top and bottom borders
-    #             if r == 0 or r == 14:
-    #                 result += "*"
-    #             # Side borders
-    #             elif c == 0 or c == 99:
-    #                 result += "*"
-    #             elif c == 50 and r == 14:
-    #                 result += "_"  # door in the middle bottom
-    #
-    #             # Interior space
-    #             else:
-    #                 result += " "
-    #         result += "\n"
-    #     return result
+    def place_random_pits(self):
+        num_pits = random.randint(1, 3)
+        placed = 0
+        while placed < num_pits:
+            r = random.randint(1, self.height - 2)
+            c = random.randint(1, self.width - 2)
+            if self.grid[r][c] == "floor":
+                self.grid[r][c] = "pit"
+                placed += 1
 
 
-#__repr__
+    def toString(self):
+        result = ""
+        for r in range(15):
+            for c in range(100):
+                # Top and bottom borders
+                if r == 0 or r == 14:
+                    result += "*"
+                # Side borders
+                elif c == 0 or c == 99:
+                    result += "*"
+                elif c == 50 and r == 14:
+                    result += "_"  # door in the middle bottom
+
+                # Interior space
+                else:
+                    result += " "
+            result += "\n"
+        return result

@@ -98,6 +98,7 @@ def main():
                         elif button.text == "LOAD":
                             loaded_game = load_game()
                             if loaded_game:
+                                loaded_game.view = view
                                 game = loaded_game
                                 state = "playing"
                                 view.display_message("✅ Game Loaded!", 2000)
