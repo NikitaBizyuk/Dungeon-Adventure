@@ -48,7 +48,7 @@ class GameView:
         self._floor_image = pygame.image.load(floor_path).convert()
         self._floor_image = pygame.transform.scale(self._floor_image, (cell_size, cell_size))
 
-        door_path = os.path.join(os.path.dirname(__file__), "..", "assets", "door.png")
+        door_path = os.path.join(os.path.dirname(__file__), "..", "assets", "door2.png")
         self._door_image = pygame.image.load(door_path).convert_alpha()
         self._door_image = pygame.transform.scale(self._door_image, (cell_size, cell_size))
 
@@ -86,6 +86,8 @@ class GameView:
         exit_path = os.path.join(os.path.dirname(__file__), "..", "assets", "exit.png")
         self._exit_image = pygame.image.load(exit_path).convert_alpha()
         self._exit_image = pygame.transform.scale(self._exit_image, (cell_size, cell_size))
+
+
 
     # ───────────────────────── Button factories ──────────────────────
     def create_menu_buttons(self):
@@ -309,14 +311,32 @@ class GameView:
             self.cell_size,
             self.cell_size,
         )
-        pygame.draw.circle(self.screen, (255, 0, 0), hero_rect.center, self.cell_size // 3)
+        facing = game.hero_facing
+        if hasattr(hero, "update_animation"):
+            hero.update_animation(pygame.time.get_ticks())
+
+        if hasattr(hero, "get_current_frame"):
+            frame = hero.get_current_frame()
+            frame = pygame.transform.scale(frame, (self.cell_size, self.cell_size))
+
+            # Flip sprite if needed
+            if hasattr(hero, "facing_right") and not hero.facing_right:
+                frame = pygame.transform.flip(frame, True, False)
+
+            self.screen.blit(frame, hero_rect.topleft)
+
+            if hasattr(hero, "is_flashing") and hero.is_flashing():
+                outline_rect = pygame.Rect(hero_rect.x, hero_rect.y, self.cell_size, self.cell_size)
+                pygame.draw.rect(self.screen, (255, 0, 0), outline_rect, 2)  # red outline
 
         # Aim line
         center_x = hero_rect.centerx
         center_y = hero_rect.centery
         end_x = int(center_x + aim_dx * 40)
         end_y = int(center_y + aim_dy * 40)
-        pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y), (end_x, end_y), 2)
+        # Draw simple aim line instead of weapon image
+        pygame.draw.line(self.screen, (255, 255, 0), (center_x, center_y),
+                         (int(center_x + aim_dx * 40), int(center_y + aim_dy * 40)), 2)
 
         # Melee arc
         current_time = pygame.time.get_ticks()
@@ -340,6 +360,7 @@ class GameView:
         self.draw_message()
 
     # ───────────────────────── Room view ────────────────────────────
+
     def draw_room(
         self,
         game,
@@ -358,6 +379,7 @@ class GameView:
         room = game.active_room
         hero_r, hero_c = room.get_hero_position()
         monsters = room.get_monsters()
+        dt = pygame.time.Clock().tick(60)
 
         start_r = max(0, min(max(0, room.height - self.view_rows), hero_r - self.view_rows // 2))
         start_c = max(0, min(max(0, room.width - self.view_cols), hero_c - self.view_cols // 2))
@@ -377,7 +399,7 @@ class GameView:
             "wall": (40, 40, 40),
             "floor": (230, 230, 230),
             "door": (0, 128, 255),
-            "pit": (0, 0, 0),  # black pits
+            "pit": (0, 0, 0),
             pillar_1: (255, 215, 0),
             pillar_2: (255, 215, 0),
             pillar_3: (255, 215, 0),
@@ -420,9 +442,34 @@ class GameView:
                     pygame.draw.rect(self.screen, color, rect)
 
         # Hero
-        center_x = offset_x + (hero_c - start_c) * cell_size + cell_size // 2
-        center_y = offset_y + (hero_r - start_r) * cell_size + cell_size // 2
-        pygame.draw.circle(self.screen, (255, 0, 0), (center_x, center_y), cell_size // 3)
+        screen_x = offset_x + (hero_c - start_c) * cell_size
+        screen_y = offset_y + (hero_r - start_r) * cell_size
+        center_x = screen_x + cell_size // 2
+        center_y = screen_y + cell_size // 2
+
+        facing = game.hero_facing
+        if hasattr(hero, "update_animation"):
+            hero.update_animation(pygame.time.get_ticks())
+
+        if hasattr(hero, "get_current_frame"):
+            frame = hero.get_current_frame()
+            frame = pygame.transform.scale(frame, (cell_size, cell_size))
+
+            # ✅ Flip if facing left
+            if hasattr(hero, "facing_right") and not hero.facing_right:
+                frame = pygame.transform.flip(frame, True, False)
+
+            self.screen.blit(frame, (screen_x, screen_y))
+
+            # ✅ Flashing red outline if hit
+            if hasattr(hero, "is_flashing") and hero.is_flashing():
+                outline_rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
+                pygame.draw.rect(self.screen, (255, 0, 0), outline_rect, 2)
+        else:
+            # fallback for static hero image (if animation not available)
+            sprite = self._hero_images[facing]
+            hero_rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
+            self.screen.blit(sprite, hero_rect.topleft)
 
         # Aim line
         aim_dx, aim_dy = game.aim_vector
@@ -439,19 +486,37 @@ class GameView:
                 screen_y + cell_size // 2,
             )
 
-            if isinstance(monster, ogre_cls):
-                base_color = (0, 250, 0)
-            elif isinstance(monster, skeleton_cls):
-                base_color = (0, 0, 0)
-            elif isinstance(monster, gremlin_cls):
-                base_color = (0, 0, 250)
+            if hasattr(monster, "update_animation"):
+                monster.update_animation(dt)
+
+            if hasattr(monster, "get_current_frame"):
+                frame = monster.get_current_frame()
+                frame = pygame.transform.scale(frame, (cell_size, cell_size))
+
+                # ✅ Flip frame if monster is facing left
+                if hasattr(monster, "facing_right") and not monster.facing_right:
+                    frame = pygame.transform.flip(frame, True, False)
+
+                self.screen.blit(frame, (screen_x, screen_y))
+
+                # ✅ Red outline if monster is flashing
+                if hasattr(monster, "is_flashing") and monster.is_flashing():
+                    outline_rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
+                    pygame.draw.rect(self.screen, (255, 0, 0), outline_rect, 2)  # 2px red outline
             else:
-                base_color = (255, 0, 255)
+                if isinstance(monster, ogre_cls):
+                    base_color = (0, 250, 0)
+                elif isinstance(monster, skeleton_cls):
+                    base_color = (0, 0, 0)
+                elif isinstance(monster, gremlin_cls):
+                    base_color = (0, 0, 250)
+                else:
+                    base_color = (255, 0, 255)
 
-            if hasattr(monster, "is_flashing") and monster.is_flashing():
-                pygame.draw.circle(self.screen, (255, 0, 0), pos, cell_size // 2)
+                if hasattr(monster, "is_flashing") and monster.is_flashing():
+                    pygame.draw.circle(self.screen, (255, 0, 0), pos, cell_size // 2)
 
-            pygame.draw.circle(self.screen, base_color, pos, cell_size // 3)
+                pygame.draw.circle(self.screen, base_color, pos, cell_size // 3)
 
         # Projectiles
         for projectile in game.projectiles:

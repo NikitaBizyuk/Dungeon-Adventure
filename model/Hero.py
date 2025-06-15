@@ -86,10 +86,10 @@ class Hero(DungeonCharacter, ABC):
 
     def take_damage(self, amount):
         if random.random() < self._chance_to_block:
-            pass
+            print(f"{self.name} blocked the attack!")
         else:
             self.health_points -= amount
-
+            print(f"{self.name} took {amount} damage! Remaining HP: {self.health_points}")
 
     def instant_death(self):
         """Sets health to 0 immediately (e.g., pit death)."""

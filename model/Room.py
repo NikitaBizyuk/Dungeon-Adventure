@@ -93,21 +93,46 @@ class Room:
             new_r = r + dr
             new_c = c + dc
 
+            # randomness
             if random.randint(1, 100) % 7 == 0: new_r += 1
             if random.randint(1, 100) % 9 == 0: new_r += 1
             if random.randint(1, 100) % 4 == 0: new_c += 1
             if random.randint(1, 100) % 9 == 0: new_c += 1
 
+            moved = False
+
+            # Check if new tile is valid
             if (0 <= new_r < self._height and 0 <= new_c < self._width and
-                self._grid[new_r][new_c] in ["floor", "door"] and
-                (new_r, new_c) not in occupied):
+                    self._grid[new_r][new_c] in ["floor", "door"] and
+                    (new_r, new_c) not in occupied):
+
+                moved = (new_r, new_c) != (r, c)
                 new_positions[monster] = (new_r, new_c)
                 occupied.add((new_r, new_c))
             else:
+                moved = False
                 new_positions[monster] = (r, c)
                 occupied.add((r, c))
 
-        self._monsters = new_positions
+            # Set position AFTER detecting movement
+            monster.set_position(*new_positions[monster])
+
+            # ✅ Flip facing direction based on horizontal movement
+            if hasattr(monster, "facing_right"):
+                if dc < 0:
+                    monster.facing_right = False
+                elif dc > 0:
+                    monster.facing_right = True
+
+            # ✅ Set correct animation
+            if hasattr(monster, "is_attacking") and monster.is_attacking():
+                monster.current_animation = "slashing"
+            elif moved:
+                monster.current_animation = "running"
+            else:
+                monster.current_animation = "idle"
+
+        self._monsters = new_positions  # ✅ Commit monster positions
 
     def move_hero_in_room(self, dx, dy, backpack, view=None):
         nr = self._hero_r + dx
@@ -140,9 +165,19 @@ class Room:
         return None
 
     def enter(self, hero):
-        """Place hero at entry point and move monsters away from spawn area."""
-        self._hero_r = self._door_r - 1
+        """Place hero just inside the door and move monsters away from the spawn area."""
+        self._hero_r = self._door_r
         self._hero_c = self._door_c
+
+        # Step the hero into the room (away from door depending on where door is)
+        if self._door_r == 0:  # Top door
+            self._hero_r += 1
+        elif self._door_r == self._height - 1:  # Bottom door
+            self._hero_r -= 1
+        elif self._door_c == 0:  # Left door
+            self._hero_c += 1
+        elif self._door_c == self._width - 1:  # Right door
+            self._hero_c -= 1
 
         spawn_area = {
             (self._hero_r + dx, self._hero_c + dy)

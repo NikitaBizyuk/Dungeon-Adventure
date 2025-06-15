@@ -1,13 +1,14 @@
 import random
 import math
-from model.Hero import Hero
+from model.AnimatedHero import AnimatedHero
 
-class Thief(Hero):
+class Thief(AnimatedHero):
     def __init__(self, name):
         super().__init__(name, health_points=125, damage_min=20, damage_max=40,
-                         attack_speed=6, chance_to_hit=0.8)
+                         attack_speed=6, chance_to_hit=0.8, sprite_folder="reaper_man_2")
 
     def attack(self, target, damage=None):
+        self.start_attack()
         if damage is not None:
             print(f"{self.name} hurls a throwing knife for {damage} damage.")
             target.take_damage(damage)
@@ -20,6 +21,7 @@ class Thief(Hero):
                     target.take_damage(dmg)
                 else:
                     print(f"  Hit {i + 1}: missed!")
+        self.end_attack()
 
     def special_skill(self, target):
         roll = random.random()
@@ -28,30 +30,26 @@ class Thief(Hero):
             self.attack(target)
             self.attack(target)
         elif roll < 0.6:
-            print(f"{self.name}'s surprise attack failed! They were caught off guard.")
+            print(f"{self.name}'s surprise attack failed!")
         else:
-            print(f"{self.name} performs a surprise attack (normal hit).")
+            print(f"{self.name} performs a surprise attack.")
             self.attack(target)
 
     @property
-    def projectile_cooldown(self):
-        return 300
+    def projectile_cooldown(self): return 300
 
     @property
-    def projectile_speed(self):
-        return 12
+    def projectile_speed(self): return 12
 
     @property
-    def projectile_damage(self):
-        return 10
+    def projectile_damage(self): return 10
+
+    @property
+    def weapon_type(self): return "dagger"
 
     def get_melee_style(self):
-        return {
-            "color": (0, 255, 0),
-            "arc_width": math.pi / 10,
-            "reach": 35,
-            "swings": 2
-        }
+        return {"color": (0, 255, 0), "arc_width": math.pi / 10, "reach": 35, "swings": 2}
+
 
     def to_string(self):
         return (

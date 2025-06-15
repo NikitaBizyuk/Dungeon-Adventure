@@ -1,13 +1,14 @@
 import random
 import math
-from model.Hero import Hero
+from model.AnimatedHero import AnimatedHero
 
-class Priestess(Hero):
+class Priestess(AnimatedHero):
     def __init__(self, name):
         super().__init__(name, health_points=100, damage_min=25, damage_max=45,
-                         attack_speed=5, chance_to_hit=0.75)
+                         attack_speed=5, chance_to_hit=0.75, sprite_folder="dark_oracle_3")
 
     def attack(self, target, damage=None):
+        self.start_attack()
         if damage is not None:
             print(f"{self.name} fires a sacred blast for {damage} damage.")
             target.take_damage(damage)
@@ -18,6 +19,7 @@ class Priestess(Hero):
                 target.take_damage(dmg)
             else:
                 print(f"{self.name}'s staff attack missed!")
+        self.end_attack()
 
     def special_skill(self, target):
         if self.health_points >= self.max_health_points:
@@ -26,27 +28,22 @@ class Priestess(Hero):
         heal_amount = random.randint(20, 35)
         actual_heal = min(heal_amount, self.max_health_points - self.health_points)
         self.health_points += actual_heal
-        print(f"{self.name} uses Divine Grace and heals for {actual_heal} HP. New HP: {self.health_points}")
+        print(f"{self.name} uses Divine Grace and heals for {actual_heal} HP.")
 
     @property
-    def projectile_cooldown(self):
-        return 600
+    def projectile_cooldown(self): return 600
 
     @property
-    def projectile_speed(self):
-        return 10
+    def projectile_speed(self): return 10
 
     @property
-    def projectile_damage(self):
-        return 20
+    def projectile_damage(self): return 20
+
+    @property
+    def weapon_type(self): return "staff"
 
     def get_melee_style(self):
-        return {
-            "color": (160, 32, 240),
-            "arc_width": math.pi / 6,
-            "reach": 40,
-            "swings": 1
-        }
+        return {"color": (160, 32, 240), "arc_width": math.pi / 6, "reach": 40, "swings": 1}
 
     def to_string(self):
         return (

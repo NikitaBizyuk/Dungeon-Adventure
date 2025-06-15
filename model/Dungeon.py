@@ -158,8 +158,24 @@ class Dungeon:
             status = self._active_room.move_hero_in_room(dx, dy, backpack, view)
             self._active_room.move_monsters()
             if status == "exit":
+                # Move hero one tile away from door after exiting
+                if self._room_exit_point:
+                    ex, ey = self._room_exit_point
+                    dx, dy = 0, 0
+                    if self._maze[ex - 1][ey].cell_type != "wall":
+                        dx = -1
+                    elif self._maze[ex + 1][ey].cell_type != "wall":
+                        dx = 1
+                    elif self._maze[ex][ey - 1].cell_type != "wall":
+                        dy = -1
+                    elif self._maze[ex][ey + 1].cell_type != "wall":
+                        dy = 1
+                    self._hero_x, self._hero_y = ex + dx, ey + dy
                 self._in_room = False
+                if hasattr(self, "hero") and self.hero:
+                    self.hero.getting_hit = False
                 self._active_room = None
+                self.update_visibility()
         else:
             nx, ny = self._hero_x + dx, self._hero_y + dy
             if 0 <= nx < self._rows and 0 <= ny < self._cols:
@@ -169,6 +185,7 @@ class Dungeon:
                     self.update_visibility()
                     if tile.cell_type == "door":
                         room = self._rooms[tile.door_id]
+                        self._room_exit_point = (self._hero_x, self._hero_y)
                         room.enter(self)
                         self._in_room = True
                         self._active_room = room

@@ -2,6 +2,7 @@ import pygame
 import math
 from controller.dungeon_adventure import DungeonAdventure
 from controller.save_load import save_game, load_game
+from model.AnimatedHero  import AnimatedHero
 from view.game_view import GameView
 from model.Skeleton import Skeleton
 from model.Gremlin import Gremlin
@@ -65,6 +66,9 @@ def main():
             start_r = max(0, min(game.dungeon.rows - FIXED_VIEW_ROWS, hero_r - FIXED_VIEW_ROWS // 2))
             start_c = max(0, min(game.dungeon.cols - FIXED_VIEW_COLS, hero_c - FIXED_VIEW_COLS // 2))
             hero_screen_x = (hero_c - start_c) * CELL_SIZE + CELL_SIZE // 2
+            if isinstance(game.hero, AnimatedHero):
+                mouse_x, _ = pygame.mouse.get_pos()
+                game.hero.facing_right = mouse_x >= hero_screen_x
             hero_screen_y = (hero_r - start_r) * CELL_SIZE + CELL_SIZE // 2
 
         for event in pygame.event.get():
@@ -186,10 +190,25 @@ def main():
                                 view.display_message("Vision Potion used! Maze revealed briefly.", 2500)
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if event.button == 1:
+                            if isinstance(game.hero, AnimatedHero):
+                                if dx != 0 or dy != 0:
+                                    game.hero.current_animation = "run_slashing"
+                                else:
+                                    game.hero.current_animation = "slashing"
+                                game.hero._last_animation_change = pygame.time.get_ticks()
+
                             game.perform_melee_attack()
                             view.show_melee_attack()
                         elif event.button == 3:
+                            if isinstance(game.hero, AnimatedHero):
+                                if dx != 0 or dy != 0:
+                                    game.hero.current_animation = "run_throwing"
+                                else:
+                                    game.hero.current_animation = "throwing"
+                                game.hero._last_animation_change = pygame.time.get_ticks()
+
                             game.perform_ranged_attack(CELL_SIZE)
+
                     elif event.type == pygame.MOUSEMOTION:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
                         dx = mouse_x - hero_screen_x
@@ -251,6 +270,8 @@ def main():
                 if keys[pygame.K_a]: dy -= 1
                 if keys[pygame.K_d]: dy += 1
 
+                if isinstance(game.hero, AnimatedHero):
+                    game.hero._moving = dx != 0 or dy != 0
                 game.move_monsters()
                 game.monster_attack_hero()
                 game.update_projectiles(view.cell_size)
@@ -259,10 +280,20 @@ def main():
                     current_time = pygame.time.get_ticks()
                     if current_time - hero_last_move_time >= hero_move_delay:
                         result = game.move_hero(dx, dy, view)
+                        if isinstance(game.hero, AnimatedHero):
+                            game.hero._moving = dx != 0 or dy != 0
+                        if isinstance(game.hero, AnimatedHero):
+                            if dy < 0:  # moving left
+                                game.hero.facing_right = False
+                            elif dy > 0:  # moving right
+                                game.hero.facing_right = True
                         if result == "win":
                             state = "main_menu"
                             continue
-
+                        if isinstance(game.hero, AnimatedHero):
+                            if game.hero.current_animation not in ["slashing", "un_slashing", "throwing",
+                                                                   "run_throwing"]:
+                                game.hero.current_animation = "running" if game.hero._moving else "idle"
                         hero_last_move_time = current_time
                 if game.game_over:
                     view.display_message("💀 Game Over: No lives left!", 3000)

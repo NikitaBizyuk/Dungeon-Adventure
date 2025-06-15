@@ -1,4 +1,6 @@
 import pygame
+
+from model.AnimatedHero import AnimatedHero
 from model.Dungeon import Dungeon
 from model.Warrior import Warrior
 from model.Room import Room
@@ -32,8 +34,17 @@ class DungeonAdventure:
         self._vision_reveal_start = None
         self._vision_reveal_duration = 3000
         self._view = view
+        self._hero_facing = "down"
 
     def move_hero(self, dx, dy, view):
+        if dx == -1:
+            self._hero_facing = "up"
+        elif dx == 1:
+            self._hero_facing = "down"
+        elif dy == -1:
+            self._hero_facing = "left"
+        elif dy == 1:
+            self._hero_facing = "right"
         if self._dungeon.in_room:
             r_before, c_before = self._dungeon.active_room.get_hero_position()
             outcome = self._dungeon.active_room.move_hero_in_room(dx, dy, self._backpack, view)
@@ -74,6 +85,7 @@ class DungeonAdventure:
             return outcome
 
         self._dungeon.move_hero_in_room(dx, dy, self._backpack, self._view)
+
         cell = self._dungeon.maze[self._dungeon.hero_x][self._dungeon.hero_y]
 
         if cell.cell_type == "exit" and self._backpack.pillar_cntr == 4:
@@ -132,6 +144,9 @@ class DungeonAdventure:
                 self._hero.special_skill(monster)
             else:
                 self._hero.attack(monster)
+            if isinstance(self._hero, AnimatedHero):
+                self._hero.current_animation = "slashing"
+                self._hero._last_animation_change = pygame.time.get_ticks()
             monster.flash_hit()
             if not monster.is_alive():
                 del self._active_room.monsters[monster]
@@ -156,6 +171,14 @@ class DungeonAdventure:
                        damage=self._hero.projectile_damage)
         )
         self._last_projectile_time = now
+
+        # ✅ Trigger "throwing" animation for AnimatedHero
+        if isinstance(self._hero, AnimatedHero):
+            if self._hero._moving:
+                self._hero.current_animation = "run_throwing"
+            else:
+                self._hero.current_animation = "throwing"
+            self._hero._last_animation_change = pygame.time.get_ticks()
 
     def perform_special_attack(self) -> str:
         now = pygame.time.get_ticks()
@@ -188,8 +211,11 @@ class DungeonAdventure:
         hr, hc = self._active_room.get_hero_position()
         for m, (mr, mc) in self._active_room.monsters.items():
             if abs(mr - hr) + abs(mc - hc) == 1:
-                m.attack(self._hero)
+                if hasattr(m, "can_attack") and m.can_attack():
+                    m.attack(self._hero)
                 if self._hero.health_points <= 0:
+                    self._hero.getting_hit = False
+                    self._hero.current_animation = "dead"
                     self._lose_life_and_respawn()
 
     @property
@@ -224,6 +250,10 @@ class DungeonAdventure:
     @property
     def hero(self):
         return self._hero
+
+    @property
+    def hero_weapon_type(self):
+        return self._hero.weapon_type
 
     @property
     def backpack(self):
@@ -268,6 +298,10 @@ class DungeonAdventure:
     @property
     def vision_reveal_duration(self):
         return self._vision_reveal_duration
+
+    @property
+    def hero_facing(self):
+        return self._hero_facing
 
     def attach_view(self, view):
         self._view = view

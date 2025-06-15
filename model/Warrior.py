@@ -1,13 +1,14 @@
 import random
 import math
-from model.Hero import Hero
+from model.AnimatedHero import AnimatedHero
 
-class Warrior(Hero):
+class Warrior(AnimatedHero):
     def __init__(self, name):
         super().__init__(name, health_points=125, damage_min=35, damage_max=60,
-                         attack_speed=4, chance_to_hit=0.8)
+                         attack_speed=4, chance_to_hit=0.8, sprite_folder="valkyrie_2")
 
     def attack(self, target, damage=None):
+        self.start_attack()
         if damage is not None:
             print(f"{self.name} hurls a heavy axe for {damage} damage!")
             target.take_damage(damage)
@@ -18,6 +19,7 @@ class Warrior(Hero):
                 target.take_damage(dmg)
             else:
                 print(f"{self.name}'s sword attack missed!")
+        self.end_attack()
 
     def special_skill(self, target):
         print(f"{self.name} attempts a Crushing Blow!")
@@ -29,24 +31,20 @@ class Warrior(Hero):
             print("❌ Crushing Blow missed!")
 
     @property
-    def projectile_cooldown(self):
-        return 800
+    def projectile_cooldown(self): return 800
 
     @property
-    def projectile_speed(self):
-        return 8
+    def projectile_speed(self): return 8
 
     @property
-    def projectile_damage(self):
-        return 25
+    def projectile_damage(self): return 25
+
+    @property
+    def weapon_type(self): return "sword"
 
     def get_melee_style(self):
-        return {
-            "color": (255, 0, 0),
-            "arc_width": math.pi / 4,
-            "reach": 50,
-            "swings": 1
-        }
+        return {"color": (255, 0, 0), "arc_width": math.pi / 4, "reach": 50, "swings": 1}
+
 
     def to_string(self):
         return (
