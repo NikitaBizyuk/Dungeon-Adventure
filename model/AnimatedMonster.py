@@ -28,6 +28,8 @@ class AnimatedMonster(Monster):
         self._last_hit_time = -1000
         self._last_animation_change = 0
         self._animation_lock_duration = 300
+        self._sprite_folder = "zombie_villager_1"
+        self._reload_animations()
 
 
     def update_animation(self, dt):
@@ -73,3 +75,31 @@ class AnimatedMonster(Monster):
 
     def is_attacking(self):
         return self._attacking
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "animations" in state:
+            del state["animations"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._reload_animations()
+
+    def _reload_animations(self):
+        import os
+        from view.sprite_animator import SpriteAnimator
+
+        # ✅ Store this in __init__: self._sprite_folder = "zombie_villager_1"
+        base_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "assets", "sprites", self._sprite_folder)
+        )
+
+        self.animations = {
+            "idle": SpriteAnimator(os.path.join(base_path, "idle")),
+            "running": SpriteAnimator(os.path.join(base_path, "running")),
+            "slashing": SpriteAnimator(os.path.join(base_path, "slashing")),
+            "hurt": SpriteAnimator(os.path.join(base_path, "hurt")),
+            "dying": SpriteAnimator(os.path.join(base_path, "dying")),
+        }
+

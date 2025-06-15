@@ -29,6 +29,8 @@ class AnimatedHero(Hero):
         self._last_animation_change = 0
         self._animation_lock_duration = 300
         self._dead = False
+        self._sprite_folder = "valkyrie_2"
+        self._reload_animations()
 
     def take_damage(self, amount):
         self.health_points -= amount
@@ -80,3 +82,33 @@ class AnimatedHero(Hero):
 
     def get_current_frame(self):
         return self.animations[self.current_animation].get_current_frame()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove unpickleable parts (SpriteAnimator instances)
+        if "animations" in state:
+            del state["animations"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Reload animations after unpickling
+        self._reload_animations()
+
+    def _reload_animations(self):
+        import os
+        from view.sprite_animator import SpriteAnimator
+
+        base_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "assets", "sprites", self._sprite_folder)
+        )
+
+        self.animations = {
+            "idle": SpriteAnimator(os.path.join(base_path, "idle")),
+            "running": SpriteAnimator(os.path.join(base_path, "running")),
+            "slashing": SpriteAnimator(os.path.join(base_path, "slashing")),
+            "run_slashing": SpriteAnimator(os.path.join(base_path, "run_slashing")),
+            "throwing": SpriteAnimator(os.path.join(base_path, "throwing")),
+            "run_throwing": SpriteAnimator(os.path.join(base_path, "run_throwing")),
+            "hurt": SpriteAnimator(os.path.join(base_path, "hurt")),
+        }

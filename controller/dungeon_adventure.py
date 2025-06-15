@@ -318,4 +318,17 @@ class DungeonAdventure:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._view = None
+
+        # Fix missing fields after loading older save files
+        if not hasattr(self, "_view"):
+            self._view = None
+        if not hasattr(self, "_hero_facing"):
+            self._hero_facing = "down"
+        if not hasattr(self, "_special_active"):
+            self._special_active = False
+        if not hasattr(self, "_vision_reveal_start"):
+            self._vision_reveal_start = None
+        if not hasattr(self, "_vision_reveal_duration"):
+            self._vision_reveal_duration = 3000
+        if not hasattr(self, "_projectiles"):
+            self._projectiles = []

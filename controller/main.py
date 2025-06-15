@@ -100,14 +100,46 @@ def main():
                             confirmed_name = False
                             state = "difficulty_menu"
                         elif button.text == "LOAD":
+                            view._draw_transient_message("Loading... Please wait")
+                            pygame.time.delay(300)  # Give time for the user to see the message
                             loaded_game = load_game()
                             if loaded_game:
-                                loaded_game.attach_view(view)  # Use the method you defined in DungeonAdventure
+                                loaded_game.attach_view(view)
+
+                                # ✅ Promote to AnimatedHero if needed
+                                if not isinstance(loaded_game.hero, AnimatedHero):
+                                    prev = loaded_game.hero
+
+                                    # Dynamically create an animated version of the same hero type
+                                    if isinstance(prev, Warrior):
+                                        new_hero = Warrior(prev.name)
+                                    elif isinstance(prev, Priestess):
+                                        new_hero = Priestess(prev.name)
+                                    elif isinstance(prev, Thief):
+                                        new_hero = Thief(prev.name)
+                                    else:
+                                        new_hero = Warrior(prev.name)  # fallback
+
+                                    # ⛑ Copy essential runtime fields manually
+                                    new_hero.health_points = prev.health_points
+                                    new_hero.pillars_found = prev.pillars_found
+                                    new_hero.chance_to_block = prev.chance_to_block
+
+                                    # ✅ Set animation state defaults
+                                    new_hero.current_animation = "idle"
+                                    new_hero._last_animation_change = pygame.time.get_ticks()
+                                    new_hero._moving = False
+                                    new_hero.facing_right = True
+                                    new_hero.getting_hit = False
+
+                                    loaded_game._hero = new_hero
+
                                 game = loaded_game
                                 state = "playing"
-                                view.display_message("✅ Game Loaded!", 2000)
+                                view.display_message("Game Loaded!", 2000)
                             else:
-                                view.display_message("⚠️ No save found or failed to load!", 2000)
+                                view.display_message("⚠ No save found or failed to load!", 2000)
+
                         elif button.text == "ABOUT":
                             prev_menu_state = "main_menu"
                             state = "about_screen"
@@ -136,15 +168,15 @@ def main():
                         if typed_name.strip():
                             confirmed_name = True
                             typing_name = False
-                            view.display_message("✅ Name confirmed!", 1500)
+                            view.display_message("Name confirmed!", 1500)
                         else:
-                            view.display_message("❌ Enter a valid name", 1500)
+                            view.display_message("Enter a valid name", 1500)
 
 
                     elif hasattr(view, "edit_rect") and view.edit_rect and view.edit_rect.collidepoint(event.pos):
                         typing_name = True
                         confirmed_name = False
-                        view.display_message("✏️ Edit your name", 1500)
+                        view.display_message("✏ Edit your name", 1500)
 
                     elif confirmed_name:
                         for button in view.hero_buttons:
@@ -159,11 +191,13 @@ def main():
                                 hero_name = typed_name.strip()
                                 import time
                                 print("⏳ Game init started:", time.time())
+                                view._draw_transient_message("Creating game...")
+                                pygame.time.delay(300)
                                 game = DungeonAdventure(view,hero_cls=hero_cls, hero_name=hero_name)
                                 game.attach_view(view)
                                 print(f"Started {hero_name} the {choice} on {pending_difficulty.upper()}")
                                 state = "playing"
-                                print("✅ Game init finished:", time.time())
+                                print("Game init finished:", time.time())
 
             elif state == "playing":
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -229,6 +263,8 @@ def main():
                             resume_countdown = 180
                             state = "countdown"
                         elif button.text == "SAVE":
+                            view._draw_transient_message("💾 Saving...")
+                            pygame.time.delay(300)
                             try:
                                 save_game(game)
                                 view.display_message("✅ Game Saved Successfully!", 2000)

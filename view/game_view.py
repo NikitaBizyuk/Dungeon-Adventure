@@ -15,7 +15,7 @@ class GameView:
         self.last_attack_time = 0
         self.attack_duration = 150
 
-        self.font = pygame.font.Font(None, 60)
+        self.font = pygame.font.SysFont("arial", 48, bold=True)
 
         # menus
         self.menu_buttons = self.create_menu_buttons()
@@ -38,41 +38,27 @@ class GameView:
 
     # ───────────────────────── Button factories ──────────────────────
     def create_menu_buttons(self):
-        w, h = self.screen.get_size()
-        mk = lambda txt, y: Button(
-            txt, pygame.Rect(w // 2 - 100, y, 200, 60),
-            self.font, (200, 200, 200), (255, 255, 0)
-        )
-        return [
-            Button(
-                "PLAY",
-                pygame.Rect(w // 2 - 100, h // 2 - 150, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-            Button(
-                "LOAD",
-                pygame.Rect(w // 2 - 100, h // 2 - 50, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-            Button(
-                "ABOUT",
-                pygame.Rect(w // 2 - 100, h // 2 + 50, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-            Button(
-                "QUIT",
-                pygame.Rect(w // 2 - 100, h // 2 + 150, 200, 60),
-                self.font,
-                (200, 200, 200),
-                (255, 255, 0),
-            ),
-        ]
+        button_texts = ["PLAY", "LOAD", "ABOUT", "QUIT"]
+        button_width = 320
+        button_height = 70
+        spacing = 30  # spacing between buttons
+
+        total_height = len(button_texts) * button_height + (len(button_texts) - 1) * spacing
+        start_y = self.screen.get_height() // 2 - total_height // 2 + 60  # nudge downward
+
+        buttons = []
+        for i, text in enumerate(button_texts):
+            x = self.screen.get_width() // 2 - button_width // 2
+            y = start_y + i * (button_height + spacing)
+            button = Button(
+                text,
+                pygame.Rect(x, y, button_width, button_height),
+                pygame.font.SysFont("arial", 42, bold=True),
+                (220, 220, 220),
+                (255, 180, 60),
+            )
+            buttons.append(button)
+        return buttons
 
     def _create_difficulty_buttons(self):
         w, h = self.screen.get_size()
@@ -84,11 +70,27 @@ class GameView:
 
     def _create_hero_buttons(self):
         w, h = self.screen.get_size()
+        base_y = h // 2 + 80  # Start lower on the screen
+
         return [
-            Button("WARRIOR", pygame.Rect(w // 2 - 150, h // 2 - 120, 300, 60), self.font, (200, 200, 200), (255, 255, 0)),
-            Button("PRIESTESS", pygame.Rect(w // 2 - 150, h // 2 - 40, 300, 60), self.font, (200, 200, 200), (0, 255, 255)),
-            Button("THIEF", pygame.Rect(w // 2 - 150, h // 2 + 40, 300, 60), self.font, (200, 200, 200), (255, 165, 0)),
+            Button("WARRIOR", pygame.Rect(w // 2 - 150, base_y + 0, 300, 60), self.font, (200, 200, 200),
+                   (255, 255, 0)),
+            Button("PRIESTESS", pygame.Rect(w // 2 - 150, base_y + 80, 300, 60), self.font, (200, 200, 200),
+                   (0, 255, 255)),
+            Button("THIEF", pygame.Rect(w // 2 - 150, base_y + 160, 300, 60), self.font, (200, 200, 200),
+                   (255, 165, 0)),
         ]
+
+    def _draw_transient_message(self, message: str, top_left: tuple[int, int] = (30, 30)) -> None:
+        font = pygame.font.SysFont("arial", 32, bold=True)
+        text_surface = font.render(message, True, (255, 215, 0))
+        background = pygame.Surface((text_surface.get_width() + 20, text_surface.get_height() + 10))
+        background.set_alpha(180)
+        background.fill((0, 0, 0))
+        self.screen.blit(background, top_left)
+        self.screen.blit(text_surface, (top_left[0] + 10, top_left[1] + 5))
+        pygame.display.flip()  # 🔥 Force draw immediately
+
 
     def _create_pause_menu_buttons(self):
         w, h = self.screen.get_size()
@@ -100,39 +102,52 @@ class GameView:
         ]
 
     def draw_name_input(self, screen, typed_name, typing_name, confirmed_name):
-        font = pygame.font.Font(None, 48)
-        input_rect = pygame.Rect(screen.get_width() // 2 - 200, 150, 400, 60)
+        screen_width, screen_height = screen.get_size()
+        label_font = pygame.font.SysFont("arial", 36)
+        input_font = pygame.font.SysFont("arial", 42)
+        button_font = pygame.font.SysFont("arial", 42, bold=True)
 
-        # Draw input box
+        # Position everything below the game title
+        base_y = screen_height // 2 - 150  # Start lower so it's below the title
+
+        # Label
+        label_surface = label_font.render("Enter Your Hero Name:", True, (255, 215, 0))
+        label_rect = label_surface.get_rect(center=(screen_width // 2, base_y))
+        screen.blit(label_surface, label_rect)
+
+        # Input box
+        input_width, input_height = 400, 60
+        input_x = screen_width // 2 - input_width // 2
+        input_y = base_y + 40
+        input_rect = pygame.Rect(input_x, input_y, input_width, input_height)
         pygame.draw.rect(screen, (255, 255, 255), input_rect, 2)
 
-        # Add blinking cursor
+        # Cursor
         cursor = "|" if (pygame.time.get_ticks() // 500) % 2 == 0 and typing_name else ""
-        text_surface = font.render(typed_name + cursor, True, (255, 255, 255))
-        screen.blit(text_surface, (input_rect.x + 10, input_rect.y + 15))
+        text_surface = input_font.render(typed_name + cursor, True, (255, 255, 255))
+        screen.blit(text_surface, (input_rect.x + 10, input_rect.y + 10))
 
-        # Confirm button
-        confirm_font = pygame.font.Font(None, 36)
-        confirm_text = confirm_font.render("Confirm", True, (0, 0, 0))
-        self.confirm_rect = pygame.Rect(input_rect.right + 20, input_rect.y, 140, 60)
-        confirm_color = (180, 255, 180) if confirmed_name else (200, 200, 200)
-        pygame.draw.rect(screen, confirm_color, self.confirm_rect)
-        pygame.draw.rect(screen, (255, 255, 255), self.confirm_rect, 2)
-        screen.blit(confirm_text, (self.confirm_rect.x + 20, self.confirm_rect.y + 15))
+        # Confirm Button
+        self.confirm_rect = pygame.Rect(screen_width // 2 + 220, input_y, 160, input_height)
+        confirm_btn = Button("Confirm", self.confirm_rect, button_font, (160, 160, 160), (0, 255, 0))
+        confirm_btn.draw(screen)
 
-        # Edit button (only if confirmed)
+        # Edit Button
         if confirmed_name:
-            edit_font = pygame.font.Font(None, 36)
-            edit_text = edit_font.render("✏️ Edit", True, (0, 0, 0))
-            self.edit_rect = pygame.Rect(input_rect.left - 160, input_rect.y, 140, 60)
-            pygame.draw.rect(screen, (255, 255, 200), self.edit_rect)
-            pygame.draw.rect(screen, (255, 255, 255), self.edit_rect, 2)
-            screen.blit(edit_text, (self.edit_rect.x + 10, self.edit_rect.y + 15))
-
+            self.edit_rect = pygame.Rect(screen_width // 2 - 220 - 160, input_y, 160, input_height)
+            edit_btn = Button("Edit", self.edit_rect, button_font, (160, 160, 160), (255, 255, 0))
+            edit_btn.draw(screen)
 
     # ───────────────────────── Generic helpers ───────────────────────
     def draw_buttons(self, buttons):
         self.screen.blit(self.menu_bg, (0, 0))
+
+        # Draw centered game title with clean spacing
+        title_font = pygame.font.SysFont("georgia", 80, bold=True)
+        title_surface = title_font.render("Dungeon Adventure", True, (255, 215, 0))
+        title_rect = title_surface.get_rect(center=(self.screen.get_width() // 2, self.screen.get_height() // 2 - 200))
+        self.screen.blit(title_surface, title_rect)
+
         for button in buttons:
             button.draw(self.screen)
 
