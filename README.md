@@ -47,7 +47,6 @@ DungeonAdventure/
 
 The game uses a SQLite database (`monsters.db`) to store monster stats such as HP, damage, and healing range.
 
-> ⚠️ The `monsters.db` file is **not committed to Git** (it’s in `.gitignore`), so you’ll need to generate it locally before playing.
 
 ### ✅ Generate Monster Database
 
@@ -82,20 +81,22 @@ You should see a `monsters.db` file created in the `data/` directory.
 
 ## 🎮 Controls
 
-| Action            | Key / Mouse              |
-|-------------------|--------------------------|
-| Move              | Arrow keys / WASD        |
-| Attack (Melee)    | Left Click               |
-| Shoot (Ranged)    | Right Click              |
-| Open Menu / Pause | `Esc`                    |
-| Interact          | Spacebar                 |
+| Action             | Key / Mouse  |
+|--------------------|--------------|
+| Move               | WASD         |
+| Attack (Melee)     | Left Click   |
+| Shoot (Ranged)     | Right Click  |
+| Open Menu / Pause  | Esc          |
+| Special Move       | Spacebar     |
+| Inventory          | Tab          |
+
 
 ---
 
 ## 🛠️ Features
 
 - 🧱 Procedural dungeon generation
-- 👾 Animated monsters with fireball and melee attacks
+- 👾 Animated monsters with attacks
 - 🦸 Custom hero classes with different skills and animations
 - 💾 Save/load system with sprite reload support
 - 📊 SQLite-based monster stats
