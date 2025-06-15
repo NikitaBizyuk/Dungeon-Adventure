@@ -1,142 +1,167 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from model.Thief import Thief
-from model.Warrior import Warrior
-from model.Priestess import Priestess
+from unittest.mock import patch, MagicMock, PropertyMock
+import pygame
+import os
+import sys
+from model.AnimatedHero import AnimatedHero
 
 
-class DummyTarget:
-    def __init__(self):
-        self.damage_taken = []
-    def take_damage(self, dmg):
-        self.damage_taken.append(dmg)
-
-
-class TestHeroCommon(unittest.TestCase):
-
+class TestAnimatedHero(unittest.TestCase):
     def setUp(self):
-        self.thief = Thief("Robin")
-        self.warrior = Warrior("Conan")
-        self.priestess = Priestess("Celeste")
-        self.target = DummyTarget()
+        # Mock pygame and time functions
+        pygame_patcher = patch.dict('sys.modules', {'pygame': MagicMock()})
+        self.mock_pygame = pygame_patcher.start()
+        self.addCleanup(pygame_patcher.stop)
 
-    def test_thief_attributes(self):
-        self.assertEqual(self.thief.name, "Robin")
-        self.assertEqual(self.thief.health_points, 125)
-        self.assertEqual(self.thief.projectile_damage, 10)
-        self.assertEqual(self.thief.projectile_speed, 12)
-        self.assertEqual(self.thief.projectile_cooldown, 300)
+        # Mock time functions
+        self.mock_get_ticks = MagicMock(return_value=0)
+        self.mock_pygame.time.get_ticks = self.mock_get_ticks
 
-    def test_warrior_attributes(self):
-        self.assertEqual(self.warrior.name, "Conan")
-        self.assertEqual(self.warrior.health_points, 125)
-        self.assertEqual(self.warrior.projectile_damage, 25)
-        self.assertEqual(self.warrior.projectile_speed, 8)
-        self.assertEqual(self.warrior.projectile_cooldown, 800)
+        # Create a test instance with minimal dependencies
+        self.hero = AnimatedHero(
+            name="TestHero",
+            health_points=100,
+            damage_min=10,
+            damage_max=20,
+            attack_speed=5,
+            chance_to_hit=0.8,
+            sprite_folder="test_hero"
+        )
 
-    def test_priestess_attributes(self):
-        self.assertEqual(self.priestess.name, "Celeste")
-        self.assertEqual(self.priestess.health_points, 100)
-        self.assertEqual(self.priestess.projectile_damage, 20)
-        self.assertEqual(self.priestess.projectile_speed, 10)
-        self.assertEqual(self.priestess.projectile_cooldown, 600)
+        # Replace animations with simple mocks
+        self.hero.animations = {
+            "idle": MagicMock(),
+            "running": MagicMock(),
+            "slashing": MagicMock(),
+            "run_slashing": MagicMock(),
+            "throwing": MagicMock(),
+            "run_throwing": MagicMock(),
+            "hurt": MagicMock(),
+            "dead": MagicMock()
+        }
 
-    @patch("random.random", return_value=0.1)  # ensure hit
-    @patch("random.randint", return_value=30)
-    def test_thief_melee_attack_hits(self, mock_randint, mock_random):
-        self.thief.attack(self.target)
-        self.assertEqual(len(self.target.damage_taken), 2)
-        self.assertTrue(all(20 <= d <= 40 for d in self.target.damage_taken))
+    def test_initialization(self):
+        """Test basic initialization"""
+        self.assertEqual(self.hero.name, "TestHero")
+        self.assertEqual(self.hero.health_points, 100)
+        self.assertEqual(self.hero.current_animation, "idle")
+        self.assertFalse(self.hero._moving)
+        self.assertTrue(self.hero.facing_right)
+        self.assertFalse(self.hero._dead)
 
-    def test_thief_projectile_attack(self):
-        self.thief.attack(self.target, damage=13)
-        self.assertIn(13, self.target.damage_taken)
+    def test_take_damage_animation(self):
+        """Test animation changes when taking damage"""
+        # Take damage while alive
+        self.mock_get_ticks.return_value = 1000
+        self.hero.take_damage(20)
+        self.assertEqual(self.hero.current_animation, "hurt")
+        self.assertEqual(self.hero._last_animation_change, 1000)
 
-    @patch("random.random", return_value=0.1)
-    @patch("random.randint", return_value=50)
-    def test_warrior_melee_attack_hits(self, mock_randint, mock_random):
-        self.warrior.attack(self.target)
-        self.assertIn(50, self.target.damage_taken)
+        # Take lethal damage
+        self.hero.take_damage(100)
+        self.assertEqual(self.hero.current_animation, "dead")
 
-    def test_warrior_projectile_attack(self):
-        self.warrior.attack(self.target, damage=25)
-        self.assertIn(25, self.target.damage_taken)
+    def test_attack_animation_flow(self):
+        """Test attack animation sequence"""
+        # Start attack
+        self.mock_get_ticks.return_value = 1000
+        self.hero.start_attack()
+        self.assertEqual(self.hero.current_animation, "slashing")
+        self.assertEqual(self.hero._last_animation_change, 1000)
 
-    @patch("random.random", return_value=0.1)
-    @patch("random.randint", return_value=35)
-    def test_priestess_melee_attack_hits(self, mock_randint, mock_random):
-        self.priestess.attack(self.target)
-        self.assertIn(35, self.target.damage_taken)
+        # During lock period
+        self.mock_get_ticks.return_value = 1200
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "slashing")
 
-    def test_priestess_projectile_attack(self):
-        self.priestess.attack(self.target, damage=17)
-        self.assertIn(17, self.target.damage_taken)
+        # After lock period expires
+        self.mock_get_ticks.return_value = 1400  # 400ms later
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "idle")
 
-    def test_melee_styles(self):
-        thief_style = self.thief.get_melee_style()
-        warrior_style = self.warrior.get_melee_style()
-        priestess_style = self.priestess.get_melee_style()
-        self.assertEqual(thief_style["swings"], 2)
-        self.assertEqual(warrior_style["swings"], 1)
-        self.assertEqual(priestess_style["swings"], 1)
+    def test_movement_animation_transitions(self):
+        """Test animation changes based on movement state"""
+        # Start moving
+        self.hero._moving = True
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "running")
 
-    @patch("random.random", return_value=0.1)
-    def test_thief_special_double_hit(self, mock_random):
-        self.thief.special_skill(self.target)
-        self.assertGreaterEqual(len(self.target.damage_taken), 4)
+        # Stop moving
+        self.hero._moving = False
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "idle")
 
-    @patch("random.random", return_value=0.5)
-    def test_thief_special_fail(self, mock_random):
-        self.thief.special_skill(self.target)
-        self.assertEqual(len(self.target.damage_taken), 0)
+    def test_animation_priority_rules(self):
+        """Test that attack animations override movement"""
+        # Start moving then attack
+        self.hero._moving = True
+        self.mock_get_ticks.return_value = 1000
+        self.hero.start_attack()
+        self.assertEqual(self.hero.current_animation, "slashing")
 
-    @patch("random.random", return_value=0.8)
-    def test_thief_special_normal_hit(self, mock_random):
-        self.thief.special_skill(self.target)
-        self.assertGreaterEqual(len(self.target.damage_taken), 0)
+        # After attack completes, should return to running
+        self.mock_get_ticks.return_value = 1400
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "running")
 
-    @patch("random.random", return_value=0.2)
-    @patch("random.randint", return_value=100)
-    def test_warrior_crushing_blow_success(self, mock_randint, mock_random):
-        self.warrior.special_skill(self.target)
-        self.assertIn(100, self.target.damage_taken)
+    def test_death_state_handling(self):
+        """Test death animation and state management"""
+        # Die
+        self.hero.health_points = 0
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "dead")
+        self.assertTrue(self.hero._dead)
 
-    @patch("random.random", return_value=0.8)
-    def test_warrior_crushing_blow_miss(self, mock_random):
-        self.warrior.special_skill(self.target)
-        self.assertEqual(len(self.target.damage_taken), 0)
+        # Should stay in dead state
+        self.hero.update_animation(0.1)
+        self.assertEqual(self.hero.current_animation, "dead")
 
-    @patch("random.randint", return_value=30)
-    def test_priestess_heals_below_max(self, mock_randint):
-        self.priestess.health_points = 80
-        self.priestess.special_skill(None)
-        self.assertEqual(self.priestess.health_points, 100)
+    def test_flash_hit_mechanism(self):
+        """Test hit flash timing"""
+        # Initial state
+        self.assertFalse(self.hero.is_flashing())
 
-    def test_priestess_heal_no_effect_at_max(self):
-        self.priestess.health_points = 100
-        self.priestess.special_skill(None)
-        self.assertEqual(self.priestess.health_points, 100)
+        # Take hit
+        self.mock_get_ticks.return_value = 1000
+        self.hero.flash_hit()
+        self.assertTrue(self.hero.is_flashing())
 
-    def test_to_string_methods(self):
-        self.assertIn("HP", self.thief.to_String())
-        self.assertIn("Pillars", self.warrior.to_string())
-        self.assertIn("HP", self.priestess.to_string())
+        # After flash duration
+        self.mock_get_ticks.return_value = 1300  # 300ms later
+        self.assertTrue(self.hero.is_flashing())
 
-    def test_pillars_found_and_block_chance(self):
-        initial = self.warrior.chance_to_block
-        self.warrior.increment_pillars_found()
-        self.assertEqual(self.warrior.pillars_found, 1)
-        self.assertLess(self.warrior.chance_to_block, initial)
+        self.mock_get_ticks.return_value = 1500  # 500ms later
+        self.assertFalse(self.hero.is_flashing())
 
-    @patch("random.random", return_value=1.0)  # ensure block fails
-    def test_take_damage_unblocked(self, mock_random):
-        hp_before = self.thief.health_points
-        self.thief.take_damage(15)
-        self.assertLess(self.thief.health_points, hp_before)
+    def test_animation_update_propagation(self):
+        """Test that updates reach current animation"""
+        # Check idle animation update
+        self.hero.update_animation(0.1)
+        self.hero.animations["idle"].update.assert_called_with(0.1)
 
-    @patch("random.random", return_value=0.0)  # ensure block succeeds
-    def test_take_damage_blocked(self, mock_random):
-        hp_before = self.thief.health_points
-        self.thief.take_damage(15)
-        self.assertEqual(self.thief.health_points, hp_before)
+        # Check running animation update
+        self.hero._moving = True
+        self.hero.animations["idle"].reset_mock()
+        self.hero.update_animation(0.2)
+        self.hero.animations["running"].update.assert_called_with(0.2)
 
+    def test_pickle_compatibility(self):
+        """Test serialization support"""
+        import pickle
+
+        # Mock the animation reloading
+        with patch.object(self.hero, '_reload_animations') as mock_reload:
+            # Serialize and deserialize
+            data = pickle.dumps(self.hero)
+            new_hero = pickle.loads(data)
+
+            # Should attempt to reload animations
+            mock_reload.assert_called_once()
+
+            # Core properties should be preserved
+            self.assertEqual(new_hero.name, self.hero.name)
+            self.assertEqual(new_hero.health_points, self.hero.health_points)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -27,7 +27,6 @@ class Room:
         self._hero_r = height - 2
         self._hero_c = width // 2
         self._is_trap = random.random() < 0.1
-
         self._carve_layout()
         self.place_random_pits()
 
