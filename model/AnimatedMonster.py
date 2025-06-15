@@ -6,26 +6,29 @@ from view.sprite_animator import SpriteAnimator
 
 class AnimatedMonster(Monster):
     def __init__(self, name, hp, attack_speed, chance_to_hit,
-                 damage_min, damage_max, chance_to_heal, heal_min, heal_max, sprite_folder):
+                 damage_min, damage_max, chance_to_heal, heal_min, heal_max,
+                 animations=None, sprite_folder=None):
         super().__init__(name, damage_min, damage_max, attack_speed, hp,
                          chance_to_hit, chance_to_heal, heal_min, heal_max)
 
-        base_path = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites", sprite_folder)
-        base_path = os.path.abspath(base_path)
-
-        self.animations = {
-            "idle": SpriteAnimator(os.path.join(base_path, "idle")),
-            "running": SpriteAnimator(os.path.join(base_path, "running")),
-            "slashing": SpriteAnimator(os.path.join(base_path, "slashing")),
-            "hurt": SpriteAnimator(os.path.join(base_path, "hurt")),
-            "dying": SpriteAnimator(os.path.join(base_path, "dying")),
-        }
+        if animations:
+            self.animations = animations
+        else:
+            base_path = os.path.abspath(os.path.join("assets", "sprites", sprite_folder))
+            self.animations = {
+                "idle": SpriteAnimator(os.path.join(base_path, "idle")),
+                "running": SpriteAnimator(os.path.join(base_path, "running")),
+                "slashing": SpriteAnimator(os.path.join(base_path, "slashing")),
+                "hurt": SpriteAnimator(os.path.join(base_path, "hurt")),
+                "dying": SpriteAnimator(os.path.join(base_path, "dying")),
+            }
 
         self.current_animation = "idle"
         self.facing_right = True
         self._last_hit_time = -1000
         self._last_animation_change = 0
         self._animation_lock_duration = 300
+
 
     def update_animation(self, dt):
         if self.current_animation in self.animations:

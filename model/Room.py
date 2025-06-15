@@ -155,7 +155,15 @@ class Room:
                 self._hero_c = nc
 
                 if target == "door":
-                    return "exit"
+                    if Room._current_difficulty == "easy":
+                        return "exit"
+                    elif not self._monsters:
+                        return "exit"
+                    else:
+                        if view:
+                            view.display_message("❌ Defeat all monsters to exit!", 2000)
+                        return None  # Prevent exiting while monsters are alive
+
 
                 if target in ["A", "E", "I", "P", "Health Potion", "Vision Potion"]:
                     backpack.add(target, view)

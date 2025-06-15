@@ -35,6 +35,7 @@ class DungeonAdventure:
         self._vision_reveal_duration = 3000
         self._view = view
         self._hero_facing = "down"
+        self._last_hero_tile = None
 
     def move_hero(self, dx, dy, view):
         if dx == -1:
@@ -51,28 +52,27 @@ class DungeonAdventure:
             r_after, c_after = self._dungeon.active_room.get_hero_position()
 
             if outcome == "pit":
-                difficulty = Room._current_difficulty.lower()
+                r_after, c_after = self._dungeon.active_room.get_hero_position()
 
-                if difficulty == "easy":
-                    damage = 30
-                    self._hero.take_damage(damage)
-                    self._view.display_message("⚠️ You fell into a pit! -30 HP", 2000)
+                if self._last_hero_tile != "pit":
+                    difficulty = Room._current_difficulty.lower()
+                    if difficulty == "easy":
+                        self._hero.take_damage(30)
+                        self._view.display_message("⚠️ You fell into a pit! -30 HP", 2000)
+                    elif difficulty == "medium":
+                        self._hero.take_damage(50)
+                        self._view.display_message("⚠️ You fell into a pit! -50 HP", 2000)
+                    else:
+                        self._hero.instant_death()
+                        self._view.display_message("☠️ You fell into a pit and died!", 2000)
 
-                elif difficulty == "medium":
-                    damage = 50
-                    self._hero.take_damage(damage)
-                    self._view.display_message("⚠️ You fell into a pit! -50 HP", 2000)
+                    if self._hero.health_points <= 0:
+                        self._lose_life_and_respawn()
 
-                else:  # hard mode — instant death
-                    self._hero.instant_death()
-                    self._view.display_message("☠️ You fell into a pit and died!", 2000)
-
-                # No matter the difficulty, check for death
-                if self._hero.health_points <= 0:
-                    self._lose_life_and_respawn()
-
-                # ✅ Never overwrite the pit tile — keep it there
+                self._last_hero_tile = "pit"
                 return "pit"
+
+
 
 
             elif outcome == "exit":
@@ -81,7 +81,8 @@ class DungeonAdventure:
                 self._active_room = None
                 self._dungeon.update_visibility()
                 return "exit"
-
+            if outcome != "pit":
+                self._last_hero_tile = outcome
             return outcome
 
         self._dungeon.move_hero_in_room(dx, dy, self._backpack, self._view)

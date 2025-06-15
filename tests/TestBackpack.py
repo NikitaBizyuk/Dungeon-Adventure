@@ -15,7 +15,7 @@ class TestBackPack(TestCase):
     def test_add_items(self):
         # Test adding regular items
         self.backpack.add("Sword")
-        self.assertIn("Sword", self.backpack.get_inventory())
+        self.assertIn("Sword", self.backpack._inventory())
 
         # Test adding health potion
         self.backpack.add("Health Potion")

@@ -1,13 +1,28 @@
 import random
 import pygame
 from model.AnimatedMonster import AnimatedMonster
+import os
+from view.sprite_animator import SpriteAnimator
 
 class Gremlin(AnimatedMonster):
+    _cached_animations = None
+
     def __init__(self, name, hp, attack_speed, chance_to_hit,
                  damage_min, damage_max, chance_to_heal, heal_min, heal_max):
+        if Gremlin._cached_animations is None:
+            base_path = os.path.join(os.path.dirname(__file__), "..", "assets", "sprites", "zombie_villager_1")
+            Gremlin._cached_animations = {
+                "idle": SpriteAnimator(os.path.join(base_path, "idle")),
+                "running": SpriteAnimator(os.path.join(base_path, "running")),
+                "slashing": SpriteAnimator(os.path.join(base_path, "slashing")),
+                "hurt": SpriteAnimator(os.path.join(base_path, "hurt")),
+                "dying": SpriteAnimator(os.path.join(base_path, "dying")),
+            }
+
         super().__init__(name, hp, attack_speed, chance_to_hit,
                          damage_min, damage_max, chance_to_heal, heal_min, heal_max,
-                         sprite_folder="zombie_villager_1")
+                         animations=Gremlin._cached_animations)
+
 
 
     def attack(self, target):

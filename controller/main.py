@@ -157,10 +157,13 @@ def main():
                                 }[choice]
 
                                 hero_name = typed_name.strip()
+                                import time
+                                print("⏳ Game init started:", time.time())
                                 game = DungeonAdventure(view,hero_cls=hero_cls, hero_name=hero_name)
                                 game.attach_view(view)
                                 print(f"Started {hero_name} the {choice} on {pending_difficulty.upper()}")
                                 state = "playing"
+                                print("✅ Game init finished:", time.time())
 
             elif state == "playing":
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:

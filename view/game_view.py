@@ -29,64 +29,11 @@ class GameView:
         self.message_start_time = 0
         self.message_duration = 0
 
-        # menu background
-        img_path = os.path.join(
-            os.path.dirname(__file__), "..", "assets", "DungeonBackground.png"
-        )
-        self.menu_bg = pygame.transform.scale(
-            pygame.image.load(img_path).convert(), self.screen.get_size()
-        )
+        img_path = os.path.join(os.path.dirname(__file__), "..", "assets", "DungeonBackground.png")
+        self.menu_bg = pygame.transform.scale(pygame.image.load(img_path).convert(), self.screen.get_size())
 
         self.pause_buttons = self._create_pause_menu_buttons()
         self.edit_rect = None
-
-        wall_path = os.path.join(os.path.dirname(__file__), "..", "assets", "wall2.png")
-        self._wall_image = pygame.image.load(wall_path).convert()
-        self._wall_image = pygame.transform.scale(self._wall_image, (cell_size, cell_size))
-
-        floor_path = os.path.join(os.path.dirname(__file__), "..", "assets", "floor.png")
-        self._floor_image = pygame.image.load(floor_path).convert()
-        self._floor_image = pygame.transform.scale(self._floor_image, (cell_size, cell_size))
-
-        door_path = os.path.join(os.path.dirname(__file__), "..", "assets", "door2.png")
-        self._door_image = pygame.image.load(door_path).convert_alpha()
-        self._door_image = pygame.transform.scale(self._door_image, (cell_size, cell_size))
-
-        pit_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pit.png")
-        self._pit_image = pygame.image.load(pit_path).convert_alpha()
-        self._pit_image = pygame.transform.scale(self._pit_image, (cell_size, cell_size))
-
-        # Load health potion image
-        hp_path = os.path.join(os.path.dirname(__file__), "..", "assets", "health_potion.png")
-        self._health_potion_image = pygame.image.load(hp_path).convert_alpha()
-        self._health_potion_image = pygame.transform.scale(self._health_potion_image, (cell_size, cell_size))
-
-        # Load vision potion image
-        vp_path = os.path.join(os.path.dirname(__file__), "..", "assets", "vision_potion.png")
-        self._vision_potion_image = pygame.image.load(vp_path).convert_alpha()
-        self._vision_potion_image = pygame.transform.scale(self._vision_potion_image, (cell_size, cell_size))
-
-        # Pillar crown images
-        pillar_a_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_a.png")
-        self._pillar_a_image = pygame.image.load(pillar_a_path).convert_alpha()
-        self._pillar_a_image = pygame.transform.scale(self._pillar_a_image, (cell_size, cell_size))
-
-        pillar_e_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_e.png")
-        self._pillar_e_image = pygame.image.load(pillar_e_path).convert_alpha()
-        self._pillar_e_image = pygame.transform.scale(self._pillar_e_image, (cell_size, cell_size))
-
-        pillar_i_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_i.png")
-        self._pillar_i_image = pygame.image.load(pillar_i_path).convert_alpha()
-        self._pillar_i_image = pygame.transform.scale(self._pillar_i_image, (cell_size, cell_size))
-
-        pillar_p_path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_p.png")
-        self._pillar_p_image = pygame.image.load(pillar_p_path).convert_alpha()
-        self._pillar_p_image = pygame.transform.scale(self._pillar_p_image, (cell_size, cell_size))
-
-        exit_path = os.path.join(os.path.dirname(__file__), "..", "assets", "exit.png")
-        self._exit_image = pygame.image.load(exit_path).convert_alpha()
-        self._exit_image = pygame.transform.scale(self._exit_image, (cell_size, cell_size))
-
 
 
     # ───────────────────────── Button factories ──────────────────────
@@ -287,13 +234,13 @@ class GameView:
 
                 # Draw tile image
                 if cell.cell_type == "wall" and cell.explored:
-                    self.screen.blit(self._wall_image, rect.topleft)
+                    self.screen.blit(self.wall_image, rect.topleft)
                 elif cell.cell_type == "hallway" and (vision_active or cell.visible):
-                    self.screen.blit(self._floor_image, rect.topleft)
+                    self.screen.blit(self.floor_image, rect.topleft)
                 elif cell.cell_type == "door" and (vision_active or cell.visible):
-                    self.screen.blit(self._door_image, rect.topleft)
+                    self.screen.blit(self.door_image, rect.topleft)
                 elif cell.cell_type == "exit" and (vision_active or cell.visible):
-                    self.screen.blit(self._exit_image, rect.topleft)
+                    self.screen.blit(self.exit_image, rect.topleft)
                 else:
                     pygame.draw.rect(self.screen, (10, 10, 10), rect)  # unexplored = black
 
@@ -417,27 +364,27 @@ class GameView:
                 rect = pygame.Rect(screen_x, screen_y, cell_size, cell_size)
                 color = base_colors.get(tile, (255, 0, 255))
                 if tile == "wall":
-                    self.screen.blit(self._wall_image, rect.topleft)
+                    self.screen.blit(self.wall_image, rect.topleft)
                 elif tile == "floor":
-                    self.screen.blit(self._floor_image, rect.topleft)
+                    self.screen.blit(self.floor_image, rect.topleft)
                 elif tile == "door":
-                    self.screen.blit(self._door_image, rect.topleft)
+                    self.screen.blit(self.door_image, rect.topleft)
                 elif tile == "pit":
-                    self.screen.blit(self._pit_image, rect.topleft)
+                    self.screen.blit(self.pit_image, rect.topleft)
                 elif tile == "Health Potion":
-                    self.screen.blit(self._health_potion_image, rect.topleft)
+                    self.screen.blit(self.health_potion_image, rect.topleft)
                 elif tile == "Vision Potion":
-                    self.screen.blit(self._vision_potion_image, rect.topleft)
+                    self.screen.blit(self.vision_potion_image, rect.topleft)
                 elif tile == "A":
-                    self.screen.blit(self._pillar_a_image, rect.topleft)
+                    self.screen.blit(self.pillar_a_image, rect.topleft)
                 elif tile == "E":
-                    self.screen.blit(self._pillar_e_image, rect.topleft)
+                    self.screen.blit(self.pillar_e_image, rect.topleft)
                 elif tile == "I":
-                    self.screen.blit(self._pillar_i_image, rect.topleft)
+                    self.screen.blit(self.pillar_i_image, rect.topleft)
                 elif tile == "P":
-                    self.screen.blit(self._pillar_p_image, rect.topleft)
+                    self.screen.blit(self.pillar_p_image, rect.topleft)
                 elif tile == "exit":
-                    self.screen.blit(self._exit_image, rect.topleft)
+                    self.screen.blit(self.exit_image, rect.topleft)
                 else:
                     pygame.draw.rect(self.screen, color, rect)
 
@@ -663,4 +610,90 @@ class GameView:
             self.screen.blit(text, text_rect)
             y_offset += line_height
 
+    @property
+    def wall_image(self):
+        if not hasattr(self, "_wall_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "wall2.png")
+            self._wall_image = pygame.transform.scale(pygame.image.load(path).convert(),
+                                                      (self.cell_size, self.cell_size))
+        return self._wall_image
 
+    @property
+    def floor_image(self):
+        if not hasattr(self, "_floor_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "floor.png")
+            self._floor_image = pygame.transform.scale(pygame.image.load(path).convert(),
+                                                       (self.cell_size, self.cell_size))
+        return self._floor_image
+
+    @property
+    def door_image(self):
+        if not hasattr(self, "_door_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "door2.png")
+            self._door_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                      (self.cell_size, self.cell_size))
+        return self._door_image
+
+    @property
+    def pit_image(self):
+        if not hasattr(self, "_pit_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "pit.png")
+            self._pit_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                     (self.cell_size, self.cell_size))
+        return self._pit_image
+
+    @property
+    def health_potion_image(self):
+        if not hasattr(self, "_health_potion_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "health_potion.png")
+            self._health_potion_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                               (self.cell_size, self.cell_size))
+        return self._health_potion_image
+
+    @property
+    def vision_potion_image(self):
+        if not hasattr(self, "_vision_potion_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "vision_potion.png")
+            self._vision_potion_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                               (self.cell_size, self.cell_size))
+        return self._vision_potion_image
+
+    @property
+    def pillar_a_image(self):
+        if not hasattr(self, "_pillar_a_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_a.png")
+            self._pillar_a_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                          (self.cell_size, self.cell_size))
+        return self._pillar_a_image
+
+    @property
+    def pillar_e_image(self):
+        if not hasattr(self, "_pillar_e_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_e.png")
+            self._pillar_e_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                          (self.cell_size, self.cell_size))
+        return self._pillar_e_image
+
+    @property
+    def pillar_i_image(self):
+        if not hasattr(self, "_pillar_i_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_i.png")
+            self._pillar_i_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                          (self.cell_size, self.cell_size))
+        return self._pillar_i_image
+
+    @property
+    def pillar_p_image(self):
+        if not hasattr(self, "_pillar_p_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "pillar_p.png")
+            self._pillar_p_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                          (self.cell_size, self.cell_size))
+        return self._pillar_p_image
+
+    @property
+    def exit_image(self):
+        if not hasattr(self, "_exit_image"):
+            path = os.path.join(os.path.dirname(__file__), "..", "assets", "exit.png")
+            self._exit_image = pygame.transform.scale(pygame.image.load(path).convert_alpha(),
+                                                      (self.cell_size, self.cell_size))
+        return self._exit_image
