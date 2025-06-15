@@ -1,6 +1,7 @@
 import random
 from model.MonsterFactory import MonsterFactory
-
+import heapq
+from model.pathfinding import a_star_search
 
 class Room:
     _room_id = 0
@@ -81,50 +82,42 @@ class Room:
                 self._grid[r][c] = "pit"
                 placed += 1
 
+
     def move_monsters(self):
         new_positions = {}
         occupied = set(self._monsters.values())
         occupied.add((self._hero_r, self._hero_c))
 
         for monster in list(self._monsters.keys()):
-            r, c = self._monsters[monster]
-            dr = 1 if r < self._hero_r else -1 if r > self._hero_r else 0
-            dc = 1 if c < self._hero_c else -1 if c > self._hero_c else 0
-            new_r = r + dr
-            new_c = c + dc
+            start = self._monsters[monster]
+            goal = (self._hero_r, self._hero_c)
 
-            # randomness
-            if random.randint(1, 100) % 7 == 0: new_r += 1
-            if random.randint(1, 100) % 9 == 0: new_r += 1
-            if random.randint(1, 100) % 4 == 0: new_c += 1
-            if random.randint(1, 100) % 9 == 0: new_c += 1
-
+            path = a_star_search(self._grid, start, goal)
             moved = False
 
-            # Check if new tile is valid
-            if (0 <= new_r < self._height and 0 <= new_c < self._width and
-                    self._grid[new_r][new_c] in ["floor", "door"] and
-                    (new_r, new_c) not in occupied):
-
-                moved = (new_r, new_c) != (r, c)
-                new_positions[monster] = (new_r, new_c)
-                occupied.add((new_r, new_c))
+            # Move one step if path exists
+            if path:
+                next_step = path[0]
+                if next_step not in occupied:
+                    new_positions[monster] = next_step
+                    moved = next_step != start
+                    occupied.add(next_step)
+                else:
+                    new_positions[monster] = start
             else:
-                moved = False
-                new_positions[monster] = (r, c)
-                occupied.add((r, c))
+                new_positions[monster] = start
 
-            # Set position AFTER detecting movement
             monster.set_position(*new_positions[monster])
 
-            # ✅ Flip facing direction based on horizontal movement
+            # Flip facing
+            dx = new_positions[monster][1] - start[1]
             if hasattr(monster, "facing_right"):
-                if dc < 0:
+                if dx < 0:
                     monster.facing_right = False
-                elif dc > 0:
+                elif dx > 0:
                     monster.facing_right = True
 
-            # ✅ Set correct animation
+            # Animation logic
             if hasattr(monster, "is_attacking") and monster.is_attacking():
                 monster.current_animation = "slashing"
             elif moved:
@@ -132,7 +125,7 @@ class Room:
             else:
                 monster.current_animation = "idle"
 
-        self._monsters = new_positions  # ✅ Commit monster positions
+        self._monsters = new_positions
 
     def move_hero_in_room(self, dx, dy, backpack, view=None):
         nr = self._hero_r + dx

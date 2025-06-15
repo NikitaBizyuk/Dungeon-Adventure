@@ -1,5 +1,5 @@
 import pygame
-from view.button import Button  # Adjust if Button is elsewhere
+from view.menu_button import Button  # Adjust if Button is elsewhere
 
 class MenuController:
     def __init__(self, buttons: list[Button]) -> None:
